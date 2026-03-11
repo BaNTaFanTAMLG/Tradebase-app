@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FF4D00">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TradeBase">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>TradeBase</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -971,7 +978,16 @@ textarea.finp { resize:vertical; min-height:90px; }
 </div>
 
 <script>
-  // ─── N8N WEBHOOK CONFIG ───────────────────────────────────────────────────
+  // ─── SERVICE WORKER (PWA) ─────────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('TradeBase SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+
+
   // Replace these URLs with your real n8n webhook URLs when ready
   const WEBHOOKS = {
     newInvoice:       'https://your-n8n-instance.com/webhook/new-invoice',
