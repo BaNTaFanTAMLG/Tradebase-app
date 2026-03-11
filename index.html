@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TradeBase</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #080808;
+  --dark: #101010;
+  --card: #161616;
+  --card2: #1e1e1e;
+  --border: #252525;
+  --border2: #333;
+  --orange: #FF4D00;
+  --amber: #F5A623;
+  --green: #00D563;
+  --red: #FF3B3B;
+  --blue: #4D9EFF;
+  --text: #F2F2F2;
+  --muted: #777;
+  --subtle: #3a3a3a;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { height:100%; }
+body { height:100%; background:var(--black); color:var(--text); font-family:var(--font-body); max-width:430px; margin:0 auto; overflow:hidden; position:relative; }
+
+/* PAGE SYSTEM */
+.page { display:none; position:absolute; top:0; left:0; right:0; bottom:0; overflow-y:auto; overflow-x:hidden; background:var(--black); }
+.page.active { display:block; animation: fadeUp 0.2s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* TOAST */
+#toast { position:fixed; bottom:88px; left:50%; transform:translateX(-50%) translateY(8px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:11px 20px; border-radius:30px; font-size:13px; font-weight:500; z-index:9999; opacity:0; transition:all 0.25s; white-space:nowrap; pointer-events:none; max-width:90vw; }
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+#toast.success { border-color:var(--green); color:var(--green); }
+#toast.error { border-color:var(--red); color:var(--red); }
+#toast.info { border-color:var(--orange); color:var(--orange); }
+
+/* MODAL */
+#modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); z-index:8000; display:none; align-items:flex-end; justify-content:center; padding:20px; }
+#modal.show { display:flex; }
+.modal-box { background:var(--card2); border:1px solid var(--border2); border-radius:20px; padding:24px 20px; width:100%; max-width:390px; animation:fadeUp 0.2s ease; }
+.modal-title { font-family:var(--font-display); font-size:22px; letter-spacing:1px; margin-bottom:8px; }
+.modal-msg { font-size:14px; color:var(--muted); margin-bottom:20px; line-height:1.5; }
+.modal-btns { display:flex; gap:10px; }
+
+/* LOGIN PAGE */
+#page-login { flex-direction:column; justify-content:center; align-items:center; padding:40px 32px; background:var(--black); }
+#page-login.active { display:flex !important; }
+.login-bg { position:absolute; inset:0; background:radial-gradient(ellipse at 20% 50%, rgba(255,77,0,0.08), transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(255,77,0,0.05), transparent 50%); pointer-events:none; }
+.login-grid { position:absolute; inset:0; background-image:linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size:40px 40px; opacity:0.2; pointer-events:none; }
+.login-logo { font-family:var(--font-display); font-size:56px; letter-spacing:4px; line-height:1; text-align:center; position:relative; z-index:1; }
+.login-logo span { color:var(--orange); }
+.login-tagline { font-size:12px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:6px; margin-bottom:48px; text-align:center; position:relative; z-index:1; }
+.login-form { width:100%; position:relative; z-index:1; }
+.login-lbl { display:block; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:7px; }
+.login-input { width:100%; background:var(--card); border:1px solid var(--border2); border-radius:10px; padding:14px 16px; color:var(--text); font-family:var(--font-body); font-size:15px; outline:none; margin-bottom:16px; transition:border-color 0.2s; -webkit-appearance:none; }
+.login-input:focus { border-color:var(--orange); }
+.login-input::placeholder { color:var(--subtle); }
+.login-btn { width:100%; background:var(--orange); color:white; border:none; border-radius:10px; padding:16px; font-family:var(--font-display); font-size:20px; letter-spacing:2px; cursor:pointer; margin-top:8px; transition:all 0.15s; }
+.login-btn:active { transform:scale(0.98); }
+.login-hint { text-align:center; font-size:12px; color:var(--muted); margin-top:16px; }
+.login-hint span { color:var(--orange); cursor:pointer; text-decoration:underline; }
+
+/* TOPBAR */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 20px 14px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); z-index:100; }
+.logo { font-family:var(--font-display); font-size:24px; letter-spacing:3px; }
+.logo span { color:var(--orange); }
+.back-btn { display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--muted); font-family:var(--font-body); font-size:14px; cursor:pointer; transition:color 0.2s; }
+.back-btn:hover { color:var(--text); }
+.icon-btn { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1; }
+.notif-wrap { position:relative; }
+.notif-badge { position:absolute; top:0; right:0; width:8px; height:8px; background:var(--orange); border-radius:50%; border:2px solid var(--black); }
+
+/* HOME */
+.home-header { padding:24px 20px 16px; border-bottom:1px solid var(--border); }
+.home-date { font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.home-title { font-family:var(--font-display); font-size:38px; letter-spacing:2px; line-height:1; }
+.home-co { font-size:13px; color:var(--muted); margin-top:4px; }
+.home-co span { color:var(--orange); }
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border-bottom:1px solid var(--border); }
+.stat-cell { background:var(--dark); padding:16px 12px; text-align:center; }
+.stat-val { font-family:var(--font-display); font-size:26px; letter-spacing:1px; color:var(--orange); line-height:1; margin-bottom:3px; }
+.stat-lbl { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; }
+.mod-wrap { padding:16px 16px 100px; }
+.sec-head { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; }
+.mod-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.mod { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px 16px; cursor:pointer; transition:transform 0.15s; position:relative; overflow:hidden; user-select:none; -webkit-user-select:none; }
+.mod:active { transform:scale(0.97); }
+.mod.wide { grid-column:span 2; }
+.mod-top { position:absolute; top:0; left:0; right:0; height:3px; border-radius:16px 16px 0 0; }
+.mod-ico { font-size:26px; margin-bottom:10px; display:block; line-height:1; }
+.mod-name { font-family:var(--font-display); font-size:18px; letter-spacing:1px; margin-bottom:3px; line-height:1; }
+.mod-desc { font-size:11px; color:var(--muted); line-height:1.4; }
+.mod-bge { position:absolute; top:12px; right:12px; font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; }
+.b-red { background:rgba(255,59,59,0.15); color:var(--red); border:1px solid rgba(255,59,59,0.25); }
+.b-amb { background:rgba(245,166,35,0.15); color:var(--amber); border:1px solid rgba(245,166,35,0.25); }
+.b-grn { background:rgba(0,213,99,0.15); color:var(--green); border:1px solid rgba(0,213,99,0.25); }
+
+/* INNER */
+.inner { padding:20px 20px 100px; }
+.pg-t { font-family:var(--font-display); font-size:32px; letter-spacing:2px; line-height:1; margin-bottom:4px; }
+.pg-s { font-size:13px; color:var(--muted); margin-bottom:20px; }
+.alrt { border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; gap:12px; }
+.alrt-red { background:rgba(255,59,59,0.08); border:1px solid rgba(255,59,59,0.2); }
+.alrt-amb { background:rgba(245,166,35,0.08); border:1px solid rgba(245,166,35,0.2); }
+.alrt-ico { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alrt-body strong { display:block; font-family:var(--font-display); font-size:16px; margin-bottom:2px; }
+.alrt-red .alrt-body strong { color:var(--red); }
+.alrt-amb .alrt-body strong { color:var(--amber); }
+.alrt-body p { font-size:12px; color:var(--muted); line-height:1.4; }
+.met-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.met-box { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; }
+.met-v { font-family:var(--font-display); font-size:30px; letter-spacing:1px; line-height:1; margin-bottom:4px; }
+.met-l { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:12px; }
+.c-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+.c-t { font-family:var(--font-display); font-size:17px; letter-spacing:0.5px; line-height:1; }
+.c-s { font-size:12px; color:var(--muted); margin-top:3px; }
+.pill { font-size:10px; font-weight:600; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
+.p-red { background:rgba(255,59,59,0.12); color:var(--red); border:1px solid rgba(255,59,59,0.25); }
+.p-amb { background:rgba(245,166,35,0.12); color:var(--amber); border:1px solid rgba(245,166,35,0.25); }
+.p-grn { background:rgba(0,213,99,0.12); color:var(--green); border:1px solid rgba(0,213,99,0.25); }
+.p-org { background:rgba(255,77,0,0.12); color:var(--orange); border:1px solid rgba(255,77,0,0.25); }
+.amt { font-family:var(--font-display); font-size:38px; letter-spacing:1px; line-height:1; margin-bottom:12px; color:var(--orange); }
+.amt.g { color:var(--green); } .amt.a { color:var(--amber); }
+.row { display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:7px 0; border-bottom:1px solid var(--border); }
+.row:last-of-type { border-bottom:none; }
+.rl { color:var(--muted); } .rv { font-weight:500; text-align:right; max-width:55%; }
+.brow { display:flex; gap:8px; margin-top:14px; }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 16px; border-radius:10px; font-family:var(--font-display); font-size:16px; letter-spacing:1px; cursor:pointer; border:none; transition:all 0.15s; user-select:none; -webkit-user-select:none; }
+.btn:active { transform:scale(0.97); }
+.btn-f { width:100%; display:flex; margin-bottom:10px; }
+.btn-p { background:var(--orange); color:white; }
+.btn-s { background:var(--card2); color:var(--text); border:1px solid var(--border2); flex:1; }
+.btn-g { background:transparent; color:var(--muted); border:1px solid var(--border); flex:1; }
+.btn-d { background:rgba(255,59,59,0.1); color:var(--red); border:1px solid rgba(255,59,59,0.25); flex:1; }
+.btn-grn { background:rgba(0,213,99,0.1); color:var(--green); border:1px solid rgba(0,213,99,0.25); flex:1; }
+.fgrp { margin-bottom:14px; }
+.flbl { display:block; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
+.finp { width:100%; background:var(--card); border:1px solid var(--border2); border-radius:10px; padding:13px 14px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none; transition:border-color 0.2s; -webkit-appearance:none; }
+.finp:focus { border-color:var(--orange); }
+.finp::placeholder { color:var(--subtle); }
+textarea.finp { resize:vertical; min-height:90px; }
+.sec-l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin:18px 0 10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.tli { display:flex; gap:14px; padding:12px 0; border-bottom:1px solid var(--border); }
+.tld { width:10px; height:10px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+.tlt { font-size:14px; font-weight:500; margin-bottom:3px; }
+.tlm { font-size:12px; color:var(--muted); line-height:1.4; }
+.pbar { height:5px; background:var(--border); border-radius:3px; overflow:hidden; margin:6px 0; }
+.pfil { height:100%; border-radius:3px; }
+.tlr { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); }
+.tlr:last-child { border-bottom:none; }
+.tlrn { font-family:var(--font-display); font-size:17px; letter-spacing:0.5px; }
+
+/* BOTTOM NAV */
+.bnav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:rgba(8,8,8,0.97); backdrop-filter:blur(24px); border-top:1px solid var(--border); display:none; padding:10px 0 24px; z-index:500; }
+.bnav.on { display:flex; }
+.ni { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 0; transition:all 0.15s; }
+.ni-ico { font-size:22px; line-height:1; }
+.ni-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; transition:color 0.15s; }
+.ni.on .ni-lbl { color:var(--orange); }
+.ni:active { transform:scale(0.92); }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="m-title"></div>
+    <div class="modal-msg" id="m-msg"></div>
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-p" id="m-ok" style="flex:1">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="page active" id="page-login">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-logo">Trade<span>Base</span></div>
+  <div class="login-tagline">Site Command for Subcontractors</div>
+  <div class="login-form">
+    <label class="login-lbl">Email Address</label>
+    <input type="email" class="login-input" placeholder="you@company.co.uk" value="demo@tradebase.co.uk">
+    <label class="login-lbl">Password</label>
+    <input type="password" class="login-input" placeholder="••••••••" value="password">
+    <button class="login-btn" onclick="doLogin()">SIGN IN →</button>
+    <div class="login-hint">Demo mode — <span onclick="doLogin()">tap here to skip</span></div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="page" id="page-home">
+  <div class="topbar">
+    <div class="logo">Trade<span>Base</span></div>
+    <div style="display:flex;gap:14px;align-items:center">
+      <div class="notif-wrap"><button class="icon-btn">🔔</button><div class="notif-badge"></div></div>
+      <button class="icon-btn" onclick="go('page-settings')">⚙️</button>
+    </div>
+  </div>
+  <div class="home-header">
+    <div class="home-date" id="home-date"></div>
+    <div class="home-title">GOOD MORNING</div>
+    <div class="home-co">Logged in as <span>Thalos Ltd</span></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-cell"><div class="stat-val">£47k</div><div class="stat-lbl">Outstanding</div></div>
+    <div class="stat-cell"><div class="stat-val" style="color:var(--red)">3</div><div class="stat-lbl">Overdue</div></div>
+    <div class="stat-cell"><div class="stat-val">7</div><div class="stat-lbl">Live Sites</div></div>
+  </div>
+  <div class="mod-wrap">
+    <div class="sec-head">Your Modules</div>
+    <div class="mod-grid">
+      <div class="mod wide" onclick="go('page-money')"><div class="mod-top" style="background:var(--orange)"></div><span class="mod-ico">💷</span><div class="mod-name">MONEY DASHBOARD</div><div class="mod-desc">Invoices, payments and aged debt in real time</div><div class="mod-bge b-red">3 OVERDUE</div></div>
+      <div class="mod" onclick="go('page-variations')"><div class="mod-top" style="background:var(--amber)"></div><span class="mod-ico">📋</span><div class="mod-name">VARIATIONS</div><div class="mod-desc">Log and protect extra works</div><div class="mod-bge b-amb">2 PENDING</div></div>
+      <div class="mod" onclick="go('page-diary')"><div class="mod-top" style="background:var(--green)"></div><span class="mod-ico">📸</span><div class="mod-name">SITE DIARY</div><div class="mod-desc">Daily logs and evidence</div><div class="mod-bge b-grn">TODAY</div></div>
+      <div class="mod" onclick="go('page-rfi')"><div class="mod-top" style="background:var(--orange)"></div><span class="mod-ico">❓</span><div class="mod-name">RFI TRACKER</div><div class="mod-desc">Never let an RFI go unanswered</div><div class="mod-bge b-red">1 LATE</div></div>
+      <div class="mod" onclick="go('page-snags')"><div class="mod-top" style="background:var(--amber)"></div><span class="mod-ico">🔧</span><div class="mod-name">SNAG MANAGER</div><div class="mod-desc">Close snags, release retention</div><div class="mod-bge b-amb">5 OPEN</div></div>
+      <div class="mod" onclick="go('page-programme')"><div class="mod-top" style="background:var(--blue)"></div><span class="mod-ico">📊</span><div class="mod-name">PROGRAMME</div><div class="mod-desc">Planned vs actual progress</div></div>
+      <div class="mod" onclick="go('page-documents')"><div class="mod-top" style="background:var(--subtle)"></div><span class="mod-ico">📁</span><div class="mod-name">DOCUMENTS</div><div class="mod-desc">RAMS, insurance, contracts</div><div class="mod-bge b-amb">EXPIRING</div></div>
+      <div class="mod" onclick="go('page-reputation')"><div class="mod-top" style="background:var(--amber)"></div><span class="mod-ico">⭐</span><div class="mod-name">REPUTATION</div><div class="mod-desc">Reviews and client feedback</div><div class="mod-bge b-grn">4.8★</div></div>
+      <div class="mod wide" onclick="go('page-director')"><div class="mod-top" style="background:linear-gradient(90deg,var(--orange),var(--amber))"></div><span class="mod-ico">🎯</span><div class="mod-name">DIRECTOR REPORT</div><div class="mod-desc">Full weekly business summary — money, variations, snags, programme, risk</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MONEY -->
+<div class="page" id="page-money">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">MONEY</div><div class="pg-s">All invoices and payment status</div>
+    <div class="alrt alrt-red"><div class="alrt-ico">⚠️</div><div class="alrt-body"><strong>3 INVOICES OVERDUE</strong><p>£18,500 past due — automatic chasers sent</p></div></div>
+    <div class="met-grid">
+      <div class="met-box"><div class="met-v" style="color:var(--orange)">£47,200</div><div class="met-l">Outstanding</div></div>
+      <div class="met-box"><div class="met-v" style="color:var(--red)">£18,500</div><div class="met-l">Overdue</div></div>
+      <div class="met-box"><div class="met-v" style="color:var(--amber)">£12,700</div><div class="met-l">Due This Week</div></div>
+      <div class="met-box"><div class="met-v" style="color:var(--green)">£84,300</div><div class="met-l">Paid This Month</div></div>
+    </div>
+    <div class="sec-l">Active Invoices</div>
+    <div class="card"><div class="c-head"><div><div class="c-t">INV-047</div><div class="c-s">Bracknell Retail — M&E First Fix</div></div><div class="pill p-red">OVERDUE</div></div><div class="amt">£8,400</div><div class="row"><span class="rl">Due Date</span><span class="rv">01/02/2026</span></div><div class="row"><span class="rl">Days Overdue</span><span class="rv" style="color:var(--red)">22 days</span></div><div class="row"><span class="rl">Chasers Sent</span><span class="rv">3 automatic</span></div><div class="brow"><button class="btn btn-p" style="flex:1" onclick="modal('Send Formal Demand?','A legal payment notice will be emailed immediately.',()=>toast('📧 Formal demand sent','success'))">Chase Now</button><button class="btn btn-s" onclick="toast('📄 Opening PDF...','info')">View PDF</button></div></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">INV-046</div><div class="c-s">Reading Office — 2nd Fix</div></div><div class="pill p-amb">DUE SOON</div></div><div class="amt a">£12,700</div><div class="row"><span class="rl">Due Date</span><span class="rv">26/02/2026</span></div><div class="row"><span class="rl">Days Remaining</span><span class="rv" style="color:var(--amber)">3 days</span></div><div class="row"><span class="rl">Auto Reminder</span><span class="rv">Sent this morning</span></div></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">INV-044</div><div class="c-s">Windsor Hotel</div></div><div class="pill p-grn">PAID</div></div><div class="amt g">£21,600</div><div class="row"><span class="rl">Paid On</span><span class="rv">18/02/2026</span></div></div>
+    <button class="btn btn-p btn-f" onclick="go('page-new-invoice')">+ RAISE NEW INVOICE</button>
+  </div>
+</div>
+
+<!-- NEW INVOICE -->
+<div class="page" id="page-new-invoice">
+  <div class="topbar"><button class="back-btn" onclick="go('page-money')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">RAISE INVOICE</div>
+    <div class="pg-s">Fill in the details — PDF generated and sent automatically</div>
+
+    <!-- Webhook status banner (hidden until fired) -->
+    <div id="inv-status" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;font-weight:500;line-height:1.4"></div>
+
+    <div class="fgrp"><label class="flbl">Client Name *</label><input class="finp" id="inv-client" placeholder="e.g. Turner & Townsend Ltd"></div>
+    <div class="fgrp"><label class="flbl">Client Email *</label><input type="email" class="finp" id="inv-email" placeholder="accounts@client.co.uk"></div>
+    <div class="fgrp"><label class="flbl">Client WhatsApp</label><input type="tel" class="finp" id="inv-whatsapp" placeholder="+44 7700 000000"></div>
+    <div class="fgrp"><label class="flbl">Project / Site *</label><input class="finp" id="inv-site" placeholder="e.g. Bracknell Retail Park"></div>
+    <div class="fgrp"><label class="flbl">Work Completed *</label><textarea class="finp" id="inv-work" placeholder="Plain English is fine — describe what was done and we'll formalise it"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fgrp"><label class="flbl">Amount £ *</label><input type="number" class="finp" id="inv-amount" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="fgrp"><label class="flbl">Due Date *</label><input type="date" class="finp" id="inv-due"></div>
+    </div>
+    <div class="fgrp">
+      <label class="flbl">VAT</label>
+      <select class="finp" id="inv-vat">
+        <option value="20">20% Standard</option>
+        <option value="5">5% Reduced</option>
+        <option value="0">0% Zero-rated</option>
+        <option value="exempt">Exempt</option>
+      </select>
+    </div>
+    <div class="fgrp"><label class="flbl">PO / Reference Number</label><input class="finp" id="inv-ref" placeholder="Client's PO number if known"></div>
+    <div class="fgrp"><label class="flbl">Notes (optional)</label><textarea class="finp" id="inv-notes" placeholder="Any additional notes for the invoice..."></textarea></div>
+
+    <button class="btn btn-p btn-f" id="inv-submit-btn" onclick="submitInvoice()">GENERATE & SEND →</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;text-align:center">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 6px">
+        <div style="font-size:16px;margin-bottom:3px">📧</div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.3">Email sent<br>immediately</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 6px">
+        <div style="font-size:16px;margin-bottom:3px">📅</div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.3">Reminder<br>3 days before</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 6px">
+        <div style="font-size:16px;margin-bottom:3px">⚡</div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.3">Auto-chase<br>if overdue</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VARIATIONS -->
+<div class="page" id="page-variations">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">VARIATIONS</div><div class="pg-s">Protect every extra pound of work</div>
+    <div class="alrt alrt-amb"><div class="alrt-ico">⏱️</div><div class="alrt-body"><strong>DEADLINE TODAY</strong><p>VAR-1042 — Bracknell Retail awaiting approval</p></div></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">VAR-1042</div><div class="c-s">Bracknell Retail</div></div><div class="pill p-amb">PENDING</div></div><div class="amt a">£4,800</div><div class="row"><span class="rl">Work</span><span class="rv">Additional containment — Level 3</span></div><div class="row"><span class="rl">Logged By</span><span class="rv">Dan Foreman</span></div><div class="row"><span class="rl">Deadline</span><span class="rv" style="color:var(--red)">Today</span></div><div class="brow"><button class="btn btn-s" onclick="toast('📧 Chaser sent','success')">Send Chaser</button><button class="btn btn-g" onclick="toast('📄 Opening PDF...','info')">View PDF</button></div></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">VAR-1039</div><div class="c-s">Reading Office</div></div><div class="pill p-grn">APPROVED</div></div><div class="amt g">£2,200</div><div class="row"><span class="rl">Work</span><span class="rv">Extra data points — Floor 2</span></div><div class="row"><span class="rl">Approved</span><span class="rv">19/02/2026</span></div></div>
+    <button class="btn btn-p btn-f" onclick="go('page-log-variation-new')">+ LOG NEW VARIATION</button>
+  </div>
+</div>
+
+<!-- LOG VARIATION -->
+<div class="page" id="page-log-variation">
+  <div class="topbar"><button class="back-btn" onclick="go('page-variations')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">LOG VARIATION</div><div class="pg-s">Describe what happened — we handle the paperwork</div>
+    <div class="fgrp"><label class="flbl">Site Name</label><input class="finp" placeholder="e.g. Bracknell Retail Park"></div>
+    <div class="fgrp"><label class="flbl">Main Contractor</label><input class="finp" placeholder="Company name"></div>
+    <div class="fgrp"><label class="flbl">Your Name</label><input class="finp" placeholder="Foreman name"></div>
+    <div class="fgrp"><label class="flbl">What extra work was done?</label><textarea class="finp" placeholder="Plain English is fine — we'll convert to formal JCT language automatically..."></textarea></div>
+    <div class="fgrp"><label class="flbl">Estimated Cost £</label><input type="number" class="finp" placeholder="0.00"></div>
+    <div class="fgrp"><label class="flbl">Date Work Done</label><input type="date" class="finp"></div>
+    <button class="btn btn-p btn-f" onclick="modal('Submit Variation?','Formal JCT-referenced PDF sent to contractor automatically. Auto-chased if no response in 3 days.',()=>{go('page-variations');toast('✅ Variation submitted — PDF sent','success')})">SUBMIT VARIATION →</button>
+  </div>
+</div>
+
+<!-- DIARY -->
+<div class="page" id="page-diary">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">SITE DIARY</div><div class="pg-s">Daily records and evidence trail</div>
+    <div class="sec-l">Today — 23 Feb 2026</div>
+    <div class="card" style="border-color:rgba(255,77,0,0.3)">
+      <div class="c-t" style="margin-bottom:12px">Bracknell Retail — Level 2</div>
+      <div class="row"><span class="rl">Labour on Site</span><span class="rv">6 operatives</span></div>
+      <div class="row"><span class="rl">Weather</span><span class="rv">Dry, 8°C</span></div>
+      <div class="row"><span class="rl">Progress</span><span class="rv">Containment 65%</span></div>
+      <div class="row"><span class="rl">Issues</span><span class="rv" style="color:var(--amber)">Access to riser denied</span></div>
+      <div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span>Progress</span><span style="color:var(--amber)">65%</span></div><div class="pbar"><div class="pfil" style="width:65%;background:var(--amber)"></div></div></div>
+    </div>
+    <div class="sec-l">Previous Entries</div>
+    <div class="tli"><div class="tld" style="background:var(--green)"></div><div><div class="tlt">Bracknell Retail — 22 Feb</div><div class="tlm">8 operatives · Containment L1 complete · 12 photos</div></div></div>
+    <div class="tli"><div class="tld" style="background:var(--amber)"></div><div><div class="tlt">Reading Office — 21 Feb</div><div class="tlm">4 operatives · Drawing issue — RFI-014 raised</div></div></div>
+    <div class="tli" onclick="go('page-photos')" style="cursor:pointer">
+      <div class="tld" style="background:var(--green)"></div>
+      <div style="flex:1"><div class="tlt">Bracknell Retail — 22 Feb</div><div class="tlm">8 operatives · Containment L1 complete</div></div>
+      <div style="font-size:12px;color:var(--orange);font-weight:600;align-self:center;padding-top:2px">6 PHOTOS →</div>
+    </div>
+    <div class="tli"><div class="tld" style="background:var(--amber)"></div><div><div class="tlt">Reading Office — 21 Feb</div><div class="tlm">4 operatives · Drawing issue</div></div></div>
+    <div class="tli"><div class="tld" style="background:var(--green)"></div><div><div class="tlt">Windsor Hotel — 20 Feb</div><div class="tlm">6 operatives · 2nd fix complete</div></div></div>
+    <button class="btn btn-p btn-f" style="margin-top:20px" onclick="go('page-new-diary')">+ ADD TODAY'S ENTRY</button>
+  </div>
+</div>
+
+<!-- PHOTO GALLERY -->
+<div class="page" id="page-photos">
+  <div class="topbar"><button class="back-btn" onclick="go('page-diary')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">SITE PHOTOS</div>
+    <div class="pg-s">Bracknell Retail — 22 Feb 2026 · 6 photos</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+      <div onclick="openPhoto('🏗️','Containment run — Level 1 North wall complete')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+        <div style="font-size:48px">🏗️</div><div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;padding:0 8px">Containment L1</div>
+      </div>
+      <div onclick="openPhoto('⚡','Cable tray installed above suspended ceiling grid')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+        <div style="font-size:48px">⚡</div><div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;padding:0 8px">Cable Tray</div>
+      </div>
+      <div onclick="openPhoto('🔌','Distribution board rough-in — consumer unit position marked')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+        <div style="font-size:48px">🔌</div><div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;padding:0 8px">DB Rough-in</div>
+      </div>
+      <div onclick="openPhoto('📐','RFI evidence — drawing clash at riser shaft Level 2')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+        <div style="font-size:48px">📐</div><div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;padding:0 8px">RFI Evidence</div>
+      </div>
+      <div onclick="openPhoto('👷','Labour record — 8 operatives confirmed on site')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+        <div style="font-size:48px">👷</div><div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;padding:0 8px">Labour Record</div>
+      </div>
+      <div onclick="openPhoto('✅','Containment sign-off — Level 1 complete and inspected')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+        <div style="font-size:48px">✅</div><div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;padding:0 8px">Sign-off</div>
+      </div>
+    </div>
+    <button class="btn btn-p btn-f" onclick="toast('📸 Opening camera...','info')">+ ADD PHOTO</button>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:7000;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px" onclick="closeLightbox()">
+  <div id="lb-emoji" style="font-size:120px;margin-bottom:24px;line-height:1"></div>
+  <div id="lb-caption" style="font-size:15px;color:var(--text);text-align:center;line-height:1.6;max-width:300px;margin-bottom:30px"></div>
+  <div style="font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Tap anywhere to close</div>
+</div>
+
+<!-- RFI -->
+<div class="page" id="page-rfi">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">RFI TRACKER</div><div class="pg-s">Never let an RFI go unanswered</div>
+    <div class="alrt alrt-red"><div class="alrt-ico">🚨</div><div class="alrt-body"><strong>WORK BLOCKED — 8 DAYS</strong><p>RFI-014 unanswered. Delay notice auto-issued.</p></div></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">RFI-014</div><div class="c-s">Reading Office</div></div><div class="pill p-red">8 DAYS LATE</div></div><div class="row"><span class="rl">Question</span><span class="rv">Drawing clash — L2 vs steelwork</span></div><div class="row"><span class="rl">Sent To</span><span class="rv">ABC Design Ltd</span></div><div class="row"><span class="rl">Chasers Sent</span><span class="rv">2 automatic</span></div><div class="row"><span class="rl">Work Blocked</span><span class="rv" style="color:var(--red)">Yes — on record</span></div><div class="brow"><button class="btn btn-s" onclick="toast('📧 Chaser sent','success')">Chase Again</button><button class="btn btn-d" onclick="modal('Escalate to Main Contractor?','Formal escalation notice referencing 8-day delay.',()=>toast('🚨 Escalation sent','success'))">Escalate</button></div></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">RFI-013</div><div class="c-s">Bracknell Retail</div></div><div class="pill p-grn">ANSWERED</div></div><div class="row"><span class="rl">Question</span><span class="rv">Cable spec for LV board</span></div><div class="row"><span class="rl">Answered</span><span class="rv">18/02/2026 — 3 days</span></div></div>
+    <button class="btn btn-p btn-f" onclick="go('page-new-rfi')">+ RAISE NEW RFI</button>
+  </div>
+</div>
+
+<!-- SNAGS -->
+<div class="page" id="page-snags">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">SNAG MANAGER</div><div class="pg-s">Close snags fast — release retention faster</div>
+    <div class="met-grid"><div class="met-box"><div class="met-v" style="color:var(--red)">5</div><div class="met-l">Open Snags</div></div><div class="met-box"><div class="met-v" style="color:var(--green)">12</div><div class="met-l">Closed</div></div></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">SNR-022</div><div class="c-s">Windsor Hotel — Room 204</div></div><div class="pill p-org">OPEN</div></div><div class="row"><span class="rl">Issue</span><span class="rv">Socket height non-compliant</span></div><div class="row"><span class="rl">Deadline</span><span class="rv" style="color:var(--amber)">25/02/2026</span></div><div class="row"><span class="rl">Assigned To</span><span class="rv">Dan Foreman</span></div><div class="brow"><button class="btn btn-grn" onclick="modal('Mark SNR-022 Complete?','Completion notification sent with photo evidence.',()=>toast('✅ SNR-022 closed','success'))">Mark Complete</button><button class="btn btn-g" onclick="toast('📸 Opening camera...','info')">Photo</button></div><button class="btn btn-p" style="width:100%;margin-top:8px" onclick="modal('Raise Variation from SNR-022?','A variation form will open pre-filled with the snag details. Reference SNR-022 will be linked automatically.',()=>{go(\'page-log-variation\');toast(\'📋 Variation pre-filled from SNR-022\',\'info\')})">⚡ Raise Variation from This Snag</button></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">SNR-021</div><div class="c-s">Windsor Hotel — Corridor</div></div><div class="pill p-grn">CLOSED</div></div><div class="row"><span class="rl">Issue</span><span class="rv">Lighting circuit fault</span></div><div class="row"><span class="rl">Closed On</span><span class="rv">21/02/2026</span></div><div style="margin-top:12px;padding:10px 12px;background:rgba(0,213,99,0.06);border:1px solid rgba(0,213,99,0.2);border-radius:8px;font-size:12px;color:var(--green);line-height:1.4">💰 All snags on Windsor Hotel now closed — <span style="text-decoration:underline;cursor:pointer" onclick="toast('💰 Opening retention invoice...','success')">raise retention invoice</span></div></div>
+    <button class="btn btn-p btn-f" onclick="go('page-new-snag')">+ LOG NEW SNAG</button>
+  </div>
+</div>
+
+<!-- PROGRAMME -->
+<div class="page" id="page-programme">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">PROGRAMME</div><div class="pg-s">Planned vs actual — catch delays early</div>
+    <div class="card"><div class="c-head"><div class="c-t">Bracknell Retail</div><div class="pill p-amb">AT RISK</div></div><div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span>Planned</span><span>75%</span></div><div class="pbar"><div class="pfil" style="width:75%;background:var(--subtle)"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:10px 0 4px"><span>Actual</span><span style="color:var(--amber)">58%</span></div><div class="pbar"><div class="pfil" style="width:58%;background:var(--amber)"></div></div></div><div style="margin-top:12px"><div class="row"><span class="rl">Projected Delay</span><span class="rv" style="color:var(--red)">~8 days</span></div><div class="row"><span class="rl">Cause</span><span class="rv">Riser access denied</span></div></div><button class="btn btn-p" style="width:100%;margin-top:14px" onclick="modal('Issue Delay Notice?','Formal delay notice sent to main contractor.',()=>toast('📋 Delay notice sent','success'))">SEND DELAY NOTICE</button></div>
+    <div class="card"><div class="c-head"><div class="c-t">Reading Office</div><div class="pill p-grn">ON TRACK</div></div><div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span>Progress</span><span style="color:var(--green)">82%</span></div><div class="pbar"><div class="pfil" style="width:82%;background:var(--green)"></div></div></div></div>
+    <button class="btn btn-p btn-f" onclick="go('page-update-programme')">+ UPDATE PROGRESS</button>
+  </div>
+</div>
+
+<!-- DOCUMENTS -->
+<div class="page" id="page-documents">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">DOCUMENTS</div><div class="pg-s">RAMS, insurance, contracts — always ready</div>
+    <div class="alrt alrt-amb"><div class="alrt-ico">📅</div><div class="alrt-body"><strong>INSURANCE EXPIRING</strong><p>Public Liability expires in 28 days — 22 March 2026</p></div></div>
+    <div class="card"><div class="c-head"><div class="c-t">Public Liability Insurance</div><div class="pill p-amb">28 DAYS</div></div><div class="row"><span class="rl">Provider</span><span class="rv">Hiscox</span></div><div class="row"><span class="rl">Expires</span><span class="rv">22/03/2026</span></div><div class="brow"><button class="btn btn-s" onclick="toast('📎 Sharing certificate...','info')">Share</button><button class="btn btn-g" onclick="toast('📄 Opening document...','info')">View</button></div></div>
+    <div class="card"><div class="c-head"><div class="c-t">RAMS — Bracknell Retail</div><div class="pill p-grn">APPROVED</div></div><div class="row"><span class="rl">Approved By</span><span class="rv">Turner & Townsend</span></div></div>
+    <div class="card"><div class="c-head"><div class="c-t">CSCS Cards — All Operatives</div><div class="pill p-grn">ALL VALID</div></div><div class="row"><span class="rl">Cards on File</span><span class="rv">8 operatives</span></div></div>
+    <button class="btn btn-p btn-f" onclick="go('page-upload-doc')">+ UPLOAD DOCUMENT</button>
+  </div>
+</div>
+
+<!-- REPUTATION -->
+<div class="page" id="page-reputation">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">REPUTATION</div><div class="pg-s">Protect and grow your business reputation</div>
+    <div class="met-grid"><div class="met-box"><div class="met-v" style="color:var(--green)">4.8★</div><div class="met-l">Avg Rating</div></div><div class="met-box"><div class="met-v" style="color:var(--orange)">14</div><div class="met-l">Reviews</div></div></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">Windsor Hotel</div><div class="c-s">Completed Feb 2026</div></div><div class="pill p-grn">5 ★</div></div><div style="font-size:13px;color:var(--muted);font-style:italic;margin:10px 0 12px;line-height:1.5">"Excellent team, very professional, no snagging issues at all. Would use again."</div><div class="row"><span class="rl">Client</span><span class="rv">Marriott Development</span></div><button class="btn btn-grn" style="width:100%;margin-top:12px" onclick="modal('Request Google Review?','Automated message sent to Marriott Development.',()=>toast('⭐ Review request sent','success'))">REQUEST GOOGLE REVIEW</button></div>
+    <div class="card"><div class="c-head"><div><div class="c-t">Slough Distribution</div><div class="c-s">Completed Jan 2026</div></div><div class="pill p-amb">3 ★</div></div><div style="font-size:13px;color:var(--muted);font-style:italic;margin:10px 0 12px;line-height:1.5">"Good work but communication could be better on delays."</div></div>
+    <button class="btn btn-p btn-f" onclick="toast('📋 Opening survey...','info')">+ SEND SATISFACTION SURVEY</button>
+  </div>
+</div>
+
+<!-- DIRECTOR REPORT -->
+<div class="page" id="page-director">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">DIRECTOR REPORT</div><div class="pg-s">Week ending 23 Feb 2026 — Thalos Ltd</div>
+    <div class="met-grid">
+      <div class="met-box"><div class="met-v" style="color:var(--orange)">£47k</div><div class="met-l">Outstanding</div></div>
+      <div class="met-box"><div class="met-v" style="color:var(--red)">£18.5k</div><div class="met-l">Overdue</div></div>
+      <div class="met-box"><div class="met-v" style="color:var(--amber)">2</div><div class="met-l">Vars Pending</div></div>
+      <div class="met-box"><div class="met-v" style="color:var(--red)">1</div><div class="met-l">RFI Blocking</div></div>
+    </div>
+    <div class="sec-l">Business Health</div>
+    <div class="card">
+      <div class="tlr"><span class="tlrn">Cash Flow</span><span style="font-size:22px">🔴</span></div>
+      <div class="tlr"><span class="tlrn">Variations</span><span style="font-size:22px">🟡</span></div>
+      <div class="tlr"><span class="tlrn">Programme</span><span style="font-size:22px">🟡</span></div>
+      <div class="tlr"><span class="tlrn">Snags</span><span style="font-size:22px">🟢</span></div>
+      <div class="tlr"><span class="tlrn">Compliance</span><span style="font-size:22px">🟢</span></div>
+      <div class="tlr"><span class="tlrn">Reputation</span><span style="font-size:22px">🟢</span></div>
+    </div>
+    <div class="sec-l">Actions This Week</div>
+    <div class="tli"><div class="tld" style="background:var(--red)"></div><div><div class="tlt">Chase INV-047 — £8,400 — 22 days overdue</div><div class="tlm">Bracknell Retail · Consider Section 111 notice</div></div></div>
+    <div class="tli"><div class="tld" style="background:var(--amber)"></div><div><div class="tlt">VAR-1042 deadline today — £4,800 at risk</div><div class="tlm">Send chaser before 5pm</div></div></div>
+    <div class="tli"><div class="tld" style="background:var(--amber)"></div><div><div class="tlt">RFI-014 blocking work — 8 days</div><div class="tlm">Reading Office · Escalate to PM today</div></div></div>
+    <div class="tli"><div class="tld" style="background:var(--amber)"></div><div><div class="tlt">Insurance expires 22 March</div><div class="tlm">Hiscox renewal due — act now</div></div></div>
+    <button class="btn btn-p btn-f" style="margin-top:20px" onclick="modal('Email This Report?','Full weekly report emailed to all directors.',()=>toast('📧 Report emailed to directors','success'))">📧 EMAIL THIS REPORT</button>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="topbar"><button class="back-btn" onclick="go('page-home')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">SETTINGS</div><div class="pg-s">Company and account configuration</div>
+    <div class="sec-l">Company Details</div>
+    <div class="fgrp"><label class="flbl">Company Name</label><input class="finp" value="Thalos Ltd"></div>
+    <div class="fgrp"><label class="flbl">Email</label><input type="email" class="finp" value="nicholascallisto@gmail.com"></div>
+    <div class="fgrp"><label class="flbl">Phone</label><input class="finp" value="+447437728038"></div>
+    <div class="fgrp"><label class="flbl">Sort Code</label><input class="finp" value="40-04-01"></div>
+    <div class="fgrp"><label class="flbl">Account Number</label><input class="finp" value="42501368"></div>
+    <button class="btn btn-p btn-f" onclick="toast('✅ Settings saved','success')">SAVE CHANGES</button>
+    <div class="sec-l">Account</div>
+    <button class="btn btn-d btn-f" onclick="modal('Sign Out?','You will be returned to the login screen.',()=>{go('page-login');toast('👋 Signed out','info')})">SIGN OUT</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NEW SITE DIARY ENTRY
+═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-new-diary">
+  <div class="topbar"><button class="back-btn" onclick="go('page-diary')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">SITE DIARY</div>
+    <div class="pg-s">Today's entry — photos, labour, progress, issues</div>
+    <div id="diary-status" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;font-weight:500;line-height:1.4"></div>
+
+    <div class="fgrp"><label class="flbl">Site / Project *</label><input class="finp" id="diary-site" placeholder="e.g. Bracknell Retail Park"></div>
+    <div class="fgrp"><label class="flbl">Date *</label><input type="date" class="finp" id="diary-date"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fgrp"><label class="flbl">Operatives on Site *</label><input type="number" class="finp" id="diary-labour" placeholder="0" min="0"></div>
+      <div class="fgrp"><label class="flbl">Weather</label>
+        <select class="finp" id="diary-weather">
+          <option>Dry</option><option>Overcast</option><option>Light Rain</option><option>Heavy Rain</option><option>Wind</option><option>Frost</option>
+        </select>
+      </div>
+    </div>
+    <div class="fgrp"><label class="flbl">Temperature (°C)</label><input type="number" class="finp" id="diary-temp" placeholder="e.g. 10"></div>
+    <div class="fgrp"><label class="flbl">Work Carried Out Today *</label><textarea class="finp" id="diary-work" placeholder="What was done today — areas, activities, progress made..."></textarea></div>
+    <div class="fgrp">
+      <label class="flbl">Progress % (this site)</label>
+      <input type="range" id="diary-progress" min="0" max="100" value="50" oninput="document.getElementById('diary-prog-val').textContent=this.value+'%'" style="width:100%;margin:8px 0;accent-color:var(--orange)">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>0%</span><span id="diary-prog-val" style="color:var(--orange);font-weight:600">50%</span><span>100%</span></div>
+    </div>
+    <div class="fgrp"><label class="flbl">Issues / Delays (if any)</label><textarea class="finp" id="diary-issues" placeholder="Any blockers, access issues, material delays, instructions awaited..."></textarea></div>
+    <div class="fgrp"><label class="flbl">Plant & Equipment on Site</label><input class="finp" id="diary-plant" placeholder="e.g. MEWP, scissor lift, van"></div>
+    <div class="fgrp"><label class="flbl">Visitors to Site</label><input class="finp" id="diary-visitors" placeholder="e.g. Clerk of Works, H&S inspector"></div>
+
+    <!-- PHOTO UPLOAD -->
+    <div class="sec-l">📸 Site Photos</div>
+    <div id="diary-photo-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"></div>
+    <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card);border:1px dashed var(--border2);border-radius:12px;padding:16px;cursor:pointer;font-size:13px;color:var(--muted);margin-bottom:20px">
+      <span style="font-size:20px">📷</span> Add Photos
+      <input type="file" accept="image/*" multiple capture="environment" style="display:none" onchange="handlePhotos(this,'diary-photo-grid','diary-photos')">
+    </label>
+    <input type="hidden" id="diary-photos" value="">
+
+    <button class="btn btn-p btn-f" id="diary-submit-btn" onclick="submitDiary()">SAVE DIARY ENTRY →</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Entry saved to your evidence trail — photos stored securely</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOG VARIATION — upgraded with photo upload
+═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-log-variation-new">
+  <div class="topbar"><button class="back-btn" onclick="go('page-variations')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">LOG VARIATION</div>
+    <div class="pg-s">Describe it in plain English — we handle the paperwork</div>
+    <div id="var-status" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;font-weight:500;line-height:1.4"></div>
+
+    <div class="fgrp"><label class="flbl">Site Name *</label><input class="finp" id="var-site" placeholder="e.g. Bracknell Retail Park"></div>
+    <div class="fgrp"><label class="flbl">Main Contractor *</label><input class="finp" id="var-mc" placeholder="Company name"></div>
+    <div class="fgrp"><label class="flbl">MC Contact Email *</label><input type="email" class="finp" id="var-mc-email" placeholder="pm@maincontractor.co.uk"></div>
+    <div class="fgrp"><label class="flbl">Logged By *</label><input class="finp" id="var-by" placeholder="Foreman / supervisor name"></div>
+    <div class="fgrp"><label class="flbl">Date Work Done *</label><input type="date" class="finp" id="var-date"></div>
+    <div class="fgrp"><label class="flbl">What extra work was done? *</label><textarea class="finp" id="var-desc" placeholder="Plain English — e.g. 'We had to add extra containment on Level 3 because the drawings didn't show the steelwork clash...'"></textarea></div>
+    <div class="fgrp"><label class="flbl">Verbal Instruction Given By</label><input class="finp" id="var-instruction" placeholder="e.g. Site Manager John Smith"></div>
+    <div class="fgrp"><label class="flbl">Estimated Cost £ *</label><input type="number" class="finp" id="var-cost" placeholder="0.00" min="0" step="0.01"></div>
+    <div class="fgrp"><label class="flbl">Time Spent (hours)</label><input type="number" class="finp" id="var-hours" placeholder="e.g. 8" min="0"></div>
+
+    <!-- PHOTO UPLOAD -->
+    <div class="sec-l">📸 Evidence Photos</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;margin-top:-6px">Photos of the extra work, drawings, or verbal instruction — strengthens your claim</p>
+    <div id="var-photo-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"></div>
+    <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card);border:1px dashed var(--border2);border-radius:12px;padding:16px;cursor:pointer;font-size:13px;color:var(--muted);margin-bottom:20px">
+      <span style="font-size:20px">📷</span> Add Evidence Photos
+      <input type="file" accept="image/*" multiple capture="environment" style="display:none" onchange="handlePhotos(this,'var-photo-grid','var-photos')">
+    </label>
+    <input type="hidden" id="var-photos" value="">
+
+    <button class="btn btn-p btn-f" id="var-submit-btn" onclick="submitVariation()">SUBMIT VARIATION →</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Formal JCT-referenced PDF sent to MC · Auto-chased if no response in 3 days</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     RAISE NEW RFI
+═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-new-rfi">
+  <div class="topbar"><button class="back-btn" onclick="go('page-rfi')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">RAISE RFI</div>
+    <div class="pg-s">Get the question on record — we chase the answer</div>
+    <div id="rfi-status" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;font-weight:500;line-height:1.4"></div>
+
+    <div class="fgrp"><label class="flbl">Site / Project *</label><input class="finp" id="rfi-site" placeholder="e.g. Reading Office Fit-out"></div>
+    <div class="fgrp"><label class="flbl">Addressed To *</label><input class="finp" id="rfi-to" placeholder="Designer / Architect / MC name"></div>
+    <div class="fgrp"><label class="flbl">Contact Email *</label><input type="email" class="finp" id="rfi-email" placeholder="contact@designer.co.uk"></div>
+    <div class="fgrp"><label class="flbl">RFI Subject *</label><input class="finp" id="rfi-subject" placeholder="e.g. Drawing clash — Level 2 steelwork vs M&E route"></div>
+    <div class="fgrp"><label class="flbl">Full Question / Description *</label><textarea class="finp" id="rfi-desc" placeholder="Describe the issue clearly — what information do you need and why is it blocking you?"></textarea></div>
+    <div class="fgrp">
+      <label class="flbl">Is work currently blocked?</label>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:8px;flex:1;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer">
+          <input type="radio" name="rfi-blocked" id="rfi-blocked-yes" value="yes" style="accent-color:var(--orange)"> <span style="font-size:13px">Yes — blocked now</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;flex:1;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer">
+          <input type="radio" name="rfi-blocked" id="rfi-blocked-no" value="no" checked style="accent-color:var(--orange)"> <span style="font-size:13px">Not yet</span>
+        </label>
+      </div>
+    </div>
+    <div class="fgrp"><label class="flbl">Response Required By</label><input type="date" class="finp" id="rfi-deadline"></div>
+
+    <!-- PHOTO UPLOAD -->
+    <div class="sec-l">📎 Supporting Documents / Photos</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;margin-top:-6px">Drawing markups, photos of the clash, or any relevant evidence</p>
+    <div id="rfi-photo-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"></div>
+    <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card);border:1px dashed var(--border2);border-radius:12px;padding:16px;cursor:pointer;font-size:13px;color:var(--muted);margin-bottom:20px">
+      <span style="font-size:20px">📎</span> Add Attachments
+      <input type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="handlePhotos(this,'rfi-photo-grid','rfi-photos')">
+    </label>
+    <input type="hidden" id="rfi-photos" value="">
+
+    <button class="btn btn-p btn-f" id="rfi-submit-btn" onclick="submitRfi()">SEND RFI →</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Timestamped & sent immediately · Auto-chased every 3 days · Escalation if unanswered at deadline</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOG NEW SNAG
+═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-new-snag">
+  <div class="topbar"><button class="back-btn" onclick="go('page-snags')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">LOG SNAG</div>
+    <div class="pg-s">Photo, describe, assign — we track it to closure</div>
+    <div id="snag-status" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;font-weight:500;line-height:1.4"></div>
+
+    <div class="fgrp"><label class="flbl">Site / Project *</label><input class="finp" id="snag-site" placeholder="e.g. Windsor Hotel"></div>
+    <div class="fgrp"><label class="flbl">Location on Site *</label><input class="finp" id="snag-location" placeholder="e.g. Room 204, Corridor B, Level 3"></div>
+    <div class="fgrp"><label class="flbl">Snag Description *</label><textarea class="finp" id="snag-desc" placeholder="What's the issue? Be specific — e.g. 'Socket installed at 250mm from floor, spec requires 450mm'"></textarea></div>
+    <div class="fgrp">
+      <label class="flbl">Raised By</label>
+      <div style="display:flex;gap:10px">
+        <label style="display:flex;align-items:center;gap:8px;flex:1;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer">
+          <input type="radio" name="snag-raised" value="us" checked style="accent-color:var(--orange)"> <span style="font-size:13px">Us (self-spotted)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;flex:1;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer">
+          <input type="radio" name="snag-raised" value="mc" style="accent-color:var(--orange)"> <span style="font-size:13px">Main Contractor</span>
+        </label>
+      </div>
+    </div>
+    <div class="fgrp"><label class="flbl">Assigned To</label><input class="finp" id="snag-assigned" placeholder="Operative or foreman name"></div>
+    <div class="fgrp"><label class="flbl">Fix By Date</label><input type="date" class="finp" id="snag-deadline"></div>
+    <div class="fgrp">
+      <label class="flbl">Priority</label>
+      <select class="finp" id="snag-priority">
+        <option value="low">Low — fix before handover</option>
+        <option value="medium" selected>Medium — fix this week</option>
+        <option value="high">High — fix today</option>
+        <option value="critical">Critical — blocking sign-off</option>
+      </select>
+    </div>
+
+    <!-- PHOTO UPLOAD — critical for snags -->
+    <div class="sec-l">📸 Snag Photos <span style="color:var(--red);font-size:10px">RECOMMENDED</span></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;margin-top:-6px">Photo evidence of the defect — before and after shots protect you at final account</p>
+    <div id="snag-photo-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"></div>
+    <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card);border:1px dashed var(--orange);border-radius:12px;padding:16px;cursor:pointer;font-size:13px;color:var(--muted);margin-bottom:20px">
+      <span style="font-size:20px">📷</span> <span>Take / Add Snag Photo</span>
+      <input type="file" accept="image/*" multiple capture="environment" style="display:none" onchange="handlePhotos(this,'snag-photo-grid','snag-photos')">
+    </label>
+    <input type="hidden" id="snag-photos" value="">
+
+    <button class="btn btn-p btn-f" id="snag-submit-btn" onclick="submitSnag()">LOG SNAG →</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Added to snag register · Assigned operative notified · Retention tracked automatically</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     UPDATE PROGRAMME PROGRESS
+═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-update-programme">
+  <div class="topbar"><button class="back-btn" onclick="go('page-programme')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">UPDATE PROGRESS</div>
+    <div class="pg-s">Log actual vs planned — protect your programme</div>
+    <div id="prog-status" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;font-weight:500;line-height:1.4"></div>
+
+    <div class="fgrp"><label class="flbl">Site / Project *</label><input class="finp" id="prog-site" placeholder="e.g. Bracknell Retail Park"></div>
+    <div class="fgrp"><label class="flbl">Update Date *</label><input type="date" class="finp" id="prog-date"></div>
+
+    <div class="fgrp">
+      <label class="flbl">Actual Progress % *</label>
+      <input type="range" id="prog-actual" min="0" max="100" value="60" oninput="document.getElementById('prog-actual-val').textContent=this.value+'%'" style="width:100%;margin:8px 0;accent-color:var(--orange)">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>0%</span><span id="prog-actual-val" style="color:var(--orange);font-weight:600">60%</span><span>100%</span></div>
+    </div>
+    <div class="fgrp">
+      <label class="flbl">Planned Progress % *</label>
+      <input type="range" id="prog-planned" min="0" max="100" value="75" oninput="document.getElementById('prog-planned-val').textContent=this.value+'%'" style="width:100%;margin:8px 0;accent-color:var(--subtle)">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>0%</span><span id="prog-planned-val" style="color:var(--text);font-weight:600">75%</span><span>100%</span></div>
+    </div>
+
+    <div class="fgrp"><label class="flbl">Work Completed This Period</label><textarea class="finp" id="prog-completed" placeholder="What has been done since last update..."></textarea></div>
+    <div class="fgrp"><label class="flbl">Reason for Any Delay</label><textarea class="finp" id="prog-delay" placeholder="e.g. Riser access denied by MC, awaiting drawing issue, material delay..."></textarea></div>
+    <div class="fgrp">
+      <label class="flbl">Issue Delay Notice to MC?</label>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:8px;flex:1;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer">
+          <input type="radio" name="prog-notice" id="prog-notice-yes" value="yes" style="accent-color:var(--orange)"> <span style="font-size:13px">Yes — send notice</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;flex:1;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer">
+          <input type="radio" name="prog-notice" id="prog-notice-no" value="no" checked style="accent-color:var(--orange)"> <span style="font-size:13px">No</span>
+        </label>
+      </div>
+    </div>
+    <div class="fgrp"><label class="flbl">Next Milestone</label><input class="finp" id="prog-milestone" placeholder="e.g. Level 3 containment complete by 01/04/2026"></div>
+
+    <button class="btn btn-p btn-f" id="prog-submit-btn" onclick="submitProgramme()">SAVE UPDATE →</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Programme updated · Delay notice sent if selected · Director report updated</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     UPLOAD DOCUMENT
+═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-upload-doc">
+  <div class="topbar"><button class="back-btn" onclick="go('page-documents')">← Back</button><div class="logo">Trade<span>Base</span></div><div style="width:60px"></div></div>
+  <div class="inner">
+    <div class="pg-t">UPLOAD DOCUMENT</div>
+    <div class="pg-s">Store it once — access it anywhere, share it instantly</div>
+    <div id="doc-status" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;font-weight:500;line-height:1.4"></div>
+
+    <!-- File drop zone -->
+    <div id="doc-dropzone" onclick="document.getElementById('doc-file-input').click()" style="background:var(--card);border:2px dashed var(--border2);border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:20px;transition:border-color 0.2s" ondragover="event.preventDefault();this.style.borderColor='var(--orange)'" ondragleave="this.style.borderColor='var(--border2)'" ondrop="handleDocDrop(event)">
+      <div id="doc-dropzone-content">
+        <div style="font-size:40px;margin-bottom:10px">📁</div>
+        <div style="font-family:var(--font-display);font-size:18px;letter-spacing:1px;margin-bottom:6px">TAP TO SELECT FILE</div>
+        <div style="font-size:12px;color:var(--muted)">PDF, JPG, PNG, DOC · Max 20MB</div>
+      </div>
+      <input type="file" id="doc-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="handleDocFile(this)">
+    </div>
+
+    <!-- Selected file preview -->
+    <div id="doc-preview" style="display:none;background:var(--card);border:1px solid var(--orange);border-radius:14px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="doc-preview-icon" style="font-size:36px;flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div id="doc-preview-name" style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          <div id="doc-preview-size" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+        </div>
+        <button onclick="clearDocFile()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0">✕</button>
+      </div>
+      <div id="doc-img-preview" style="display:none;margin-top:12px;border-radius:10px;overflow:hidden;max-height:200px">
+        <img id="doc-img-el" style="width:100%;object-fit:cover">
+      </div>
+    </div>
+
+    <div class="fgrp">
+      <label class="flbl">Document Type *</label>
+      <select class="finp" id="doc-type" onchange="updateDocFields()">
+        <option value="">— Select type —</option>
+        <option value="insurance">Insurance Certificate</option>
+        <option value="rams">RAMS</option>
+        <option value="cscs">CSCS Card</option>
+        <option value="contract">Contract / Subcontract</option>
+        <option value="drawing">Drawing / Spec</option>
+        <option value="certification">Certification (NICEIC, Gas Safe etc)</option>
+        <option value="o_and_m">O&M Manual</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <div class="fgrp"><label class="flbl">Document Name *</label><input class="finp" id="doc-name" placeholder="e.g. Public Liability Insurance — Hiscox 2026"></div>
+    <div class="fgrp"><label class="flbl">Linked Site / Project</label><input class="finp" id="doc-site" placeholder="Leave blank if company-wide"></div>
+
+    <div id="doc-expiry-group" style="display:none">
+      <div class="fgrp">
+        <label class="flbl">Expiry Date</label>
+        <input type="date" class="finp" id="doc-expiry">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Alert Me Before Expiry</label>
+        <select class="finp" id="doc-alert">
+          <option value="90">90 days before</option>
+          <option value="60">60 days before</option>
+          <option value="30" selected>30 days before</option>
+          <option value="14">14 days before</option>
+          <option value="7">7 days before</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="doc-operative-group" style="display:none">
+      <div class="fgrp"><label class="flbl">Operative Name</label><input class="finp" id="doc-operative" placeholder="Who does this card belong to?"></div>
+    </div>
+
+    <div id="doc-provider-group" style="display:none">
+      <div class="fgrp"><label class="flbl">Provider / Issuer</label><input class="finp" id="doc-provider" placeholder="e.g. Hiscox, NICEIC, Gas Safe"></div>
+      <div class="fgrp"><label class="flbl">Policy / Reference Number</label><input class="finp" id="doc-ref" placeholder="Reference or policy number"></div>
+    </div>
+
+    <div class="fgrp"><label class="flbl">Notes (optional)</label><textarea class="finp" id="doc-notes" placeholder="Any additional context about this document..."></textarea></div>
+
+    <!-- Shareable toggle -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:2px">Generate Shareable Link</div>
+          <div style="font-size:12px;color:var(--muted)">Share with main contractors on request</div>
+        </div>
+        <div id="doc-share-toggle" onclick="toggleDocShare()" style="width:44px;height:26px;background:var(--border2);border-radius:13px;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0">
+          <div id="doc-share-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;background:white;border-radius:50%;transition:left 0.2s"></div>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="doc-shareable" value="false">
+
+    <button class="btn btn-p btn-f" id="doc-submit-btn" onclick="submitDocument()">UPLOAD & SAVE →</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Stored in your document vault · Expiry alerts sent automatically</p>
+  </div>
+</div>
+
+
+<div class="page" id="page-billing">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('page-home');setNav(0)">← Back</button>
+    <div class="logo">Trade<span>Base</span></div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="inner">
+
+    <!-- Current plan banner -->
+    <div id="current-plan-banner" style="background:linear-gradient(135deg,rgba(255,77,0,0.15),rgba(245,166,35,0.1));border:1px solid rgba(255,77,0,0.3);border-radius:14px;padding:16px 18px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Current Plan</div>
+        <div style="font-family:var(--font-display);font-size:26px;letter-spacing:2px;color:var(--orange)" id="plan-name-display">STARTER</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="plan-renews">Renews 23 Mar 2026</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-display);font-size:32px;color:var(--text)" id="plan-price-display">£59</div>
+        <div style="font-size:11px;color:var(--muted)">/month</div>
+      </div>
+    </div>
+
+    <!-- Toggle monthly/annual -->
+    <div style="display:flex;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:20px;gap:4px">
+      <button id="tog-monthly" onclick="setBilling('monthly')" style="flex:1;padding:9px;border:none;border-radius:7px;font-family:var(--font-display);font-size:14px;letter-spacing:1px;cursor:pointer;background:var(--orange);color:white;transition:all 0.2s">MONTHLY</button>
+      <button id="tog-annual" onclick="setBilling('annual')" style="flex:1;padding:9px;border:none;border-radius:7px;font-family:var(--font-display);font-size:14px;letter-spacing:1px;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.2s">ANNUAL <span style="font-size:10px;color:var(--green)">-20%</span></button>
+    </div>
+
+    <div class="sec-l">Choose Your Plan</div>
+
+    <!-- STARTER -->
+    <div class="card" id="card-starter" style="border-color:var(--border);margin-bottom:12px;cursor:pointer" onclick="selectPlan('starter')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-family:var(--font-display);font-size:22px;letter-spacing:1.5px">STARTER</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Get control of your sites</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-display);font-size:30px;color:var(--text)" id="price-starter">£59</div>
+          <div style="font-size:11px;color:var(--muted)">/month</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Money Dashboard & Invoicing</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Variation Logger</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Site Diary & Photo Evidence</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Auto payment chasers</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--muted)">✗</span> <span style="color:var(--muted)">RFI Tracker & escalation</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--muted)">✗</span> <span style="color:var(--muted)">Snag Manager & retention alerts</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--muted)">✗</span> <span style="color:var(--muted)">Programme & delay notices</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--muted)">✗</span> <span style="color:var(--muted)">Director Report (auto-emailed)</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--muted)">✗</span> <span style="color:var(--muted)">Reputation & client reviews</span></div>
+      </div>
+      <button class="btn btn-s" style="width:100%" onclick="event.stopPropagation();openPayment('starter')">SELECT STARTER</button>
+    </div>
+
+    <!-- PRO -->
+    <div class="card" id="card-pro" style="border-color:var(--orange);margin-bottom:20px;cursor:pointer;position:relative" onclick="selectPlan('pro')">
+      <div style="position:absolute;top:-1px;left:20px;background:var(--orange);color:white;font-size:10px;font-weight:700;letter-spacing:1.5px;padding:3px 12px;border-radius:0 0 8px 8px">FULL SYSTEM</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;margin-top:18px">
+        <div>
+          <div style="font-family:var(--font-display);font-size:22px;letter-spacing:1.5px;color:var(--orange)">PRO</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">The whole system working for you</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-display);font-size:30px;color:var(--orange)" id="price-pro">£119</div>
+          <div style="font-size:11px;color:var(--muted)">/month</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Everything in Starter</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> RFI Tracker — auto-chase & escalation</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Snag Manager — retention release alerts</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Programme Tracker — delay notices</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Document Vault — expiry alerts</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Reputation Module — review requests</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Director Report — auto-emailed weekly</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> JCT-referenced variation notices</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--green)">✓</span> Priority support</div>
+      </div>
+      <div style="background:rgba(255,77,0,0.06);border:1px solid rgba(255,77,0,0.15);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.5">
+        💡 One recovered variation or released retention invoice typically covers <span style="color:var(--text);font-weight:500">6+ months</span> of Pro.
+      </div>
+      <button class="btn btn-p" style="width:100%" onclick="event.stopPropagation();openPayment('pro')">SELECT PRO</button>
+    </div>
+
+    <!-- DIRECTOR CARD REMOVED — folded into Pro -->
+
+    <div style="text-align:center;font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:10px">
+      🔒 Payments secured by Stripe<br>
+      Cancel anytime · No setup fees · 14-day free trial
+    </div>
+
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div id="payment-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:9000;display:none;align-items:flex-end;justify-content:center;padding:16px">
+  <div style="background:var(--card2);border:1px solid var(--border2);border-radius:24px;padding:28px 22px;width:100%;max-width:390px;animation:fadeUp 0.25s ease">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Subscribing to</div>
+        <div style="font-family:var(--font-display);font-size:28px;letter-spacing:2px" id="pm-plan-name">PRO</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-display);font-size:36px" id="pm-price">£119</div>
+        <div style="font-size:11px;color:var(--muted)" id="pm-cycle">/month</div>
+      </div>
+    </div>
+
+    <!-- Card input area -->
+    <div style="background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:18px;margin-bottom:16px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px">Card Details</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;background:var(--dark);border:1px solid var(--border2);border-radius:8px;padding:13px;letter-spacing:1px">4242  4242  4242  4242</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--dark);border:1px solid var(--border2);border-radius:8px;padding:13px;font-size:13px;color:var(--muted)">MM / YY</div>
+        <div style="background:var(--dark);border:1px solid var(--border2);border-radius:8px;padding:13px;font-size:13px;color:var(--muted)">CVC</div>
+      </div>
+    </div>
+
+    <!-- Demo notice -->
+    <div style="background:rgba(77,158,255,0.08);border:1px solid rgba(77,158,255,0.2);border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:12px;color:var(--blue);line-height:1.5">
+      🔧 <strong>Demo mode</strong> — Stripe not yet connected. Tap confirm to simulate a successful subscription.
+    </div>
+
+    <!-- Summary -->
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--muted)">Plan</span><span id="pm-summary-plan">Pro — Monthly</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--muted)">Trial</span><span style="color:var(--green)">14 days free</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>First charge</span><span id="pm-first-charge">£99 on 25 Mar 2026</span></div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-g" style="flex:0 0 auto;padding:14px 18px" onclick="closePayment()">Cancel</button>
+      <button class="btn btn-p" style="flex:1;font-size:18px" onclick="confirmPayment()">CONFIRM →</button>
+    </div>
+
+    <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px">🔒 Secured by Stripe · Cancel anytime</div>
+  </div>
+</div>
+
+
+<div class="bnav" id="bnav">
+  <div class="ni on" id="ni0" onclick="go('page-home');setNav(0)"><span class="ni-ico">🏠</span><span class="ni-lbl">Home</span></div>
+  <div class="ni" id="ni1" onclick="go('page-variations');setNav(1)"><span class="ni-ico">📋</span><span class="ni-lbl">Variations</span></div>
+  <div class="ni" id="ni2" onclick="go('page-diary');setNav(2)"><span class="ni-ico">📸</span><span class="ni-lbl">Diary</span></div>
+  <div class="ni" id="ni3" onclick="go('page-money');setNav(3)"><span class="ni-ico">💷</span><span class="ni-lbl">Money</span></div>
+  <div class="ni" id="ni4" onclick="go('page-billing');setNav(4)"><span class="ni-ico">⭐</span><span class="ni-lbl">Plan</span></div>
+</div>
+
+<script>
+  // ─── N8N WEBHOOK CONFIG ───────────────────────────────────────────────────
+  // Replace these URLs with your real n8n webhook URLs when ready
+  const WEBHOOKS = {
+    newInvoice:       'https://your-n8n-instance.com/webhook/new-invoice',
+    chaseInvoice:     'https://your-n8n-instance.com/webhook/chase-invoice',
+    logVariation:     'https://your-n8n-instance.com/webhook/log-variation',
+    newRfi:           'https://your-n8n-instance.com/webhook/new-rfi',
+    siteDiary:        'https://your-n8n-instance.com/webhook/site-diary',
+    logSnag:          'https://your-n8n-instance.com/webhook/log-snag',
+    programmeUpdate:  'https://your-n8n-instance.com/webhook/programme-update',
+    uploadDocument:   'https://your-n8n-instance.com/webhook/upload-document',
+  };
+
+  // ─── WEBHOOK HELPER ───────────────────────────────────────────────────────
+  // Fires a POST to the given webhook URL with a JSON payload.
+  // Returns true on success, false on failure.
+  async function fireWebhook(url, payload) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return true;
+    } catch (err) {
+      console.error('Webhook failed:', url, err);
+      return false;
+    }
+  }
+
+  // ─── DATE ─────────────────────────────────────────────────────────────────
+  // Date
+  const d = new Date();
+  const dnames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mnames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const el = document.getElementById('home-date');
+  if(el) el.textContent = dnames[d.getDay()] + ', ' + d.getDate() + ' ' + mnames[d.getMonth()] + ' ' + d.getFullYear();
+
+  function go(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById(id).scrollTop = 0;
+    const nav = document.getElementById('bnav');
+    nav.classList.toggle('on', id !== 'page-login');
+  }
+
+  function setNav(i) {
+    for(let j=0;j<5;j++) {
+      const el = document.getElementById('ni'+j);
+      if(el) el.classList.toggle('on', j===i);
+    }
+  }
+
+  // ─── INVOICE SUBMIT ───────────────────────────────────────────────────────
+  async function submitInvoice() {
+    // Grab fields
+    const client   = document.getElementById('inv-client').value.trim();
+    const email    = document.getElementById('inv-email').value.trim();
+    const whatsapp = document.getElementById('inv-whatsapp').value.trim();
+    const site     = document.getElementById('inv-site').value.trim();
+    const work     = document.getElementById('inv-work').value.trim();
+    const amount   = document.getElementById('inv-amount').value.trim();
+    const due      = document.getElementById('inv-due').value.trim();
+    const vat      = document.getElementById('inv-vat').value;
+    const ref      = document.getElementById('inv-ref').value.trim();
+    const notes    = document.getElementById('inv-notes').value.trim();
+    const statusEl = document.getElementById('inv-status');
+    const btn      = document.getElementById('inv-submit-btn');
+
+    // Validate required fields
+    if (!client || !email || !site || !work || !amount || !due) {
+      statusEl.style.display = 'block';
+      statusEl.style.background = 'rgba(255,59,59,0.08)';
+      statusEl.style.border = '1px solid rgba(255,59,59,0.3)';
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = '⚠️ Please fill in all required fields (marked with *)';
+      return;
+    }
+
+    // Format amount with VAT
+    const net = parseFloat(amount);
+    const vatRate = vat === 'exempt' ? 0 : parseFloat(vat) / 100;
+    const vatAmt = vat === 'exempt' ? 0 : net * vatRate;
+    const gross = net + vatAmt;
+
+    // Build payload — this is exactly what n8n will receive
+    const payload = {
+      // Meta
+      submittedAt:    new Date().toISOString(),
+      submittedBy:    'Thalos Ltd',
+
+      // Invoice details
+      invoiceNumber:  'INV-' + Date.now().toString().slice(-5),
+      clientName:     client,
+      clientEmail:    email,
+      clientWhatsApp: whatsapp || null,
+      site:           site,
+      workDescription: work,
+      poReference:    ref || null,
+      notes:          notes || null,
+
+      // Financials
+      netAmount:      net.toFixed(2),
+      vatRate:        vat,
+      vatAmount:      vatAmt.toFixed(2),
+      grossAmount:    gross.toFixed(2),
+      currency:       'GBP',
+
+      // Dates (DD/MM/YYYY for UK display, ISO for n8n logic)
+      dueDateISO:     due,
+      dueDateUK:      due.split('-').reverse().join('/'),
+
+      // Auto-chase schedule (n8n uses these to set reminders)
+      chaseSchedule: {
+        reminder1: '3 days before due',
+        reminder2: 'on due date',
+        overdueChase: 'every 7 days after due'
+      }
+    };
+
+    // Loading state
+    btn.textContent = 'SENDING...';
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    statusEl.style.display = 'none';
+
+    const ok = await fireWebhook(WEBHOOKS.newInvoice, payload);
+
+    // Reset button
+    btn.textContent = 'GENERATE & SEND →';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+
+    if (ok) {
+      statusEl.style.display = 'block';
+      statusEl.style.background = 'rgba(0,213,99,0.08)';
+      statusEl.style.border = '1px solid rgba(0,213,99,0.3)';
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = '✅ Invoice sent to ' + client + ' — auto-chasers scheduled';
+      toast('✅ Invoice sent — reminders scheduled', 'success');
+      setTimeout(() => go('page-money'), 1800);
+    } else {
+      statusEl.style.display = 'block';
+      statusEl.style.background = 'rgba(255,59,59,0.08)';
+      statusEl.style.border = '1px solid rgba(255,59,59,0.3)';
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = '❌ Webhook failed — check your n8n URL in the config. Payload logged to console.';
+      console.log('Invoice payload (for debugging):', JSON.stringify(payload, null, 2));
+      toast('❌ Webhook failed — see console', 'error');
+    }
+  }
+
+  function doLogin() {
+    go('page-home');
+    setNav(0);
+    toast('✅ Welcome back — Thalos Ltd','success');
+  }
+
+  let _tt;
+  function toast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show' + (type ? ' '+type : '');
+    clearTimeout(_tt);
+    _tt = setTimeout(() => t.className='', 3000);
+  }
+
+  let _cb;
+  function modal(title, msg, cb) {
+    document.getElementById('m-title').textContent = title;
+    document.getElementById('m-msg').textContent = msg;
+    _cb = cb;
+    document.getElementById('modal').classList.add('show');
+    document.getElementById('m-ok').onclick = function(){closeModal();if(_cb)_cb();};
+  }
+
+  function openPhoto(emoji, caption) {
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lb-emoji').textContent = emoji;
+    document.getElementById('lb-caption').textContent = caption;
+    lb.style.display = 'flex';
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('show');
+  }
+
+
+  // ─── PHOTO UPLOAD HANDLER ─────────────────────────────────────────────────
+  // Reads selected images, shows previews in a grid, stores base64 in hidden input
+  function handlePhotos(input, gridId, hiddenId) {
+    const files = Array.from(input.files);
+    const grid = document.getElementById(gridId);
+    const hidden = document.getElementById(hiddenId);
+    const existing = hidden.value ? JSON.parse(hidden.value) : [];
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const base64 = e.target.result;
+        existing.push({ name: file.name, data: base64, type: file.type });
+        hidden.value = JSON.stringify(existing);
+
+        // Preview thumbnail
+        const thumb = document.createElement('div');
+        thumb.style.cssText = 'position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--border2)';
+        thumb.innerHTML = `
+          <img src="${base64}" style="width:100%;height:100%;object-fit:cover">
+          <div onclick="removePhoto(this,'${gridId}','${hiddenId}',${existing.length-1})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:white">✕</div>
+        `;
+        grid.appendChild(thumb);
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value = ''; // reset so same file can be re-added
+  }
+
+  function removePhoto(btn, gridId, hiddenId, idx) {
+    const hidden = document.getElementById(hiddenId);
+    const arr = hidden.value ? JSON.parse(hidden.value) : [];
+    arr.splice(idx, 1);
+    hidden.value = JSON.stringify(arr);
+    btn.closest('div[style*="aspect-ratio"]').remove();
+  }
+
+  // ─── FORM HELPERS ─────────────────────────────────────────────────────────
+  function setStatus(id, ok, msg) {
+    const el = document.getElementById(id);
+    el.style.display = 'block';
+    el.style.background = ok ? 'rgba(0,213,99,0.08)' : 'rgba(255,59,59,0.08)';
+    el.style.border = ok ? '1px solid rgba(0,213,99,0.3)' : '1px solid rgba(255,59,59,0.3)';
+    el.style.color = ok ? 'var(--green)' : 'var(--red)';
+    el.textContent = msg;
+  }
+
+  function setBtnLoading(id, loading) {
+    const btn = document.getElementById(id);
+    btn.disabled = loading;
+    btn.style.opacity = loading ? '0.6' : '1';
+    if (loading) btn.dataset.orig = btn.textContent;
+    else btn.textContent = btn.dataset.orig || btn.textContent;
+  }
+
+  // ─── SUBMIT DIARY ─────────────────────────────────────────────────────────
+  async function submitDiary() {
+    const site   = document.getElementById('diary-site').value.trim();
+    const date   = document.getElementById('diary-date').value;
+    const labour = document.getElementById('diary-labour').value;
+    const work   = document.getElementById('diary-work').value.trim();
+    if (!site || !date || !labour || !work) { setStatus('diary-status', false, '⚠️ Please fill in all required fields'); return; }
+
+    const payload = {
+      submittedAt:   new Date().toISOString(),
+      company:       'Thalos Ltd',
+      site, date,
+      labourCount:   parseInt(labour),
+      weather:       document.getElementById('diary-weather').value,
+      temperature:   document.getElementById('diary-temp').value || null,
+      workCarriedOut: work,
+      progressPct:   document.getElementById('diary-progress').value,
+      issues:        document.getElementById('diary-issues').value.trim() || null,
+      plant:         document.getElementById('diary-plant').value.trim() || null,
+      visitors:      document.getElementById('diary-visitors').value.trim() || null,
+      photos:        document.getElementById('diary-photos').value ? JSON.parse(document.getElementById('diary-photos').value).map(p=>({name:p.name,type:p.type})) : [],
+      photoCount:    document.getElementById('diary-photos').value ? JSON.parse(document.getElementById('diary-photos').value).length : 0,
+    };
+
+    setBtnLoading('diary-submit-btn', true);
+    const ok = await fireWebhook(WEBHOOKS.siteDiary, payload);
+    setBtnLoading('diary-submit-btn', false);
+
+    if (ok) {
+      setStatus('diary-status', true, '✅ Diary entry saved — ' + payload.photoCount + ' photo(s) stored');
+      toast('✅ Diary entry saved', 'success');
+      setTimeout(() => go('page-diary'), 1800);
+    } else {
+      setStatus('diary-status', false, '❌ Webhook failed — check n8n URL. Payload logged to console.');
+      console.log('Diary payload:', JSON.stringify(payload, null, 2));
+      toast('❌ Webhook failed', 'error');
+    }
+  }
+
+  // ─── SUBMIT VARIATION ─────────────────────────────────────────────────────
+  async function submitVariation() {
+    const site = document.getElementById('var-site').value.trim();
+    const mc   = document.getElementById('var-mc').value.trim();
+    const email= document.getElementById('var-mc-email').value.trim();
+    const desc = document.getElementById('var-desc').value.trim();
+    const cost = document.getElementById('var-cost').value;
+    const date = document.getElementById('var-date').value;
+    const by   = document.getElementById('var-by').value.trim();
+    if (!site||!mc||!email||!desc||!cost||!date||!by) { setStatus('var-status',false,'⚠️ Please fill in all required fields'); return; }
+
+    const payload = {
+      submittedAt:      new Date().toISOString(),
+      company:          'Thalos Ltd',
+      variationRef:     'VAR-' + Date.now().toString().slice(-4),
+      site, mainContractor: mc, mcEmail: email,
+      loggedBy:         by,
+      dateOfWork:       date,
+      description:      desc,
+      verbalInstructionBy: document.getElementById('var-instruction').value.trim() || null,
+      estimatedCost:    parseFloat(cost).toFixed(2),
+      hoursSpent:       document.getElementById('var-hours').value || null,
+      currency:         'GBP',
+      photoCount:       document.getElementById('var-photos').value ? JSON.parse(document.getElementById('var-photos').value).length : 0,
+      chaseSchedule:    { autoChase: '3 days if no response', escalate: '7 days if no response' }
+    };
+
+    setBtnLoading('var-submit-btn', true);
+    const ok = await fireWebhook(WEBHOOKS.logVariation, payload);
+    setBtnLoading('var-submit-btn', false);
+
+    if (ok) {
+      setStatus('var-status', true, '✅ Variation ' + payload.variationRef + ' submitted — JCT notice sent to ' + mc);
+      toast('✅ Variation submitted', 'success');
+      setTimeout(() => go('page-variations'), 1800);
+    } else {
+      setStatus('var-status', false, '❌ Webhook failed — payload logged to console.');
+      console.log('Variation payload:', JSON.stringify(payload, null, 2));
+      toast('❌ Webhook failed', 'error');
+    }
+  }
+
+  // ─── SUBMIT RFI ───────────────────────────────────────────────────────────
+  async function submitRfi() {
+    const site    = document.getElementById('rfi-site').value.trim();
+    const to      = document.getElementById('rfi-to').value.trim();
+    const email   = document.getElementById('rfi-email').value.trim();
+    const subject = document.getElementById('rfi-subject').value.trim();
+    const desc    = document.getElementById('rfi-desc').value.trim();
+    if (!site||!to||!email||!subject||!desc) { setStatus('rfi-status',false,'⚠️ Please fill in all required fields'); return; }
+
+    const blocked = document.querySelector('input[name="rfi-blocked"]:checked')?.value || 'no';
+
+    const payload = {
+      submittedAt:   new Date().toISOString(),
+      company:       'Thalos Ltd',
+      rfiRef:        'RFI-' + Date.now().toString().slice(-4),
+      site, addressedTo: to, contactEmail: email,
+      subject, description: desc,
+      workBlocked:   blocked === 'yes',
+      responseDeadline: document.getElementById('rfi-deadline').value || null,
+      attachmentCount: document.getElementById('rfi-photos').value ? JSON.parse(document.getElementById('rfi-photos').value).length : 0,
+      chaseSchedule: { autoChase: 'every 3 days', escalate: 'at deadline if unanswered' }
+    };
+
+    setBtnLoading('rfi-submit-btn', true);
+    const ok = await fireWebhook(WEBHOOKS.newRfi, payload);
+    setBtnLoading('rfi-submit-btn', false);
+
+    if (ok) {
+      setStatus('rfi-status', true, '✅ ' + payload.rfiRef + ' sent to ' + to + ' — auto-chase scheduled');
+      toast('✅ RFI sent', 'success');
+      setTimeout(() => go('page-rfi'), 1800);
+    } else {
+      setStatus('rfi-status', false, '❌ Webhook failed — payload logged to console.');
+      console.log('RFI payload:', JSON.stringify(payload, null, 2));
+      toast('❌ Webhook failed', 'error');
+    }
+  }
+
+  // ─── SUBMIT SNAG ──────────────────────────────────────────────────────────
+  async function submitSnag() {
+    const site     = document.getElementById('snag-site').value.trim();
+    const location = document.getElementById('snag-location').value.trim();
+    const desc     = document.getElementById('snag-desc').value.trim();
+    if (!site||!location||!desc) { setStatus('snag-status',false,'⚠️ Please fill in all required fields'); return; }
+
+    const raisedBy = document.querySelector('input[name="snag-raised"]:checked')?.value || 'us';
+
+    const payload = {
+      submittedAt:  new Date().toISOString(),
+      company:      'Thalos Ltd',
+      snagRef:      'SNR-' + Date.now().toString().slice(-4),
+      site, location, description: desc,
+      raisedBy,
+      assignedTo:   document.getElementById('snag-assigned').value.trim() || null,
+      fixByDate:    document.getElementById('snag-deadline').value || null,
+      priority:     document.getElementById('snag-priority').value,
+      photoCount:   document.getElementById('snag-photos').value ? JSON.parse(document.getElementById('snag-photos').value).length : 0,
+      status:       'open'
+    };
+
+    setBtnLoading('snag-submit-btn', true);
+    const ok = await fireWebhook(WEBHOOKS.logVariation, payload); // reuse until dedicated webhook added
+    setBtnLoading('snag-submit-btn', false);
+
+    if (ok) {
+      setStatus('snag-status', true, '✅ ' + payload.snagRef + ' logged — ' + (payload.assignedTo || 'unassigned'));
+      toast('✅ Snag logged', 'success');
+      setTimeout(() => go('page-snags'), 1800);
+    } else {
+      setStatus('snag-status', false, '❌ Webhook failed — payload logged to console.');
+      console.log('Snag payload:', JSON.stringify(payload, null, 2));
+      toast('❌ Webhook failed', 'error');
+    }
+  }
+
+  // ─── SUBMIT PROGRAMME UPDATE ──────────────────────────────────────────────
+  async function submitProgramme() {
+    const site   = document.getElementById('prog-site').value.trim();
+    const date   = document.getElementById('prog-date').value;
+    if (!site||!date) { setStatus('prog-status',false,'⚠️ Please fill in all required fields'); return; }
+
+    const notice = document.querySelector('input[name="prog-notice"]:checked')?.value || 'no';
+    const actual  = document.getElementById('prog-actual').value;
+    const planned = document.getElementById('prog-planned').value;
+    const delta   = parseInt(actual) - parseInt(planned);
+
+    const payload = {
+      submittedAt:    new Date().toISOString(),
+      company:        'Thalos Ltd',
+      site, updateDate: date,
+      actualPct:      parseInt(actual),
+      plannedPct:     parseInt(planned),
+      variancePct:    delta,
+      status:         delta >= 0 ? 'on-track' : delta >= -10 ? 'at-risk' : 'delayed',
+      workCompleted:  document.getElementById('prog-completed').value.trim() || null,
+      delayReason:    document.getElementById('prog-delay').value.trim() || null,
+      issueDelayNotice: notice === 'yes',
+      nextMilestone:  document.getElementById('prog-milestone').value.trim() || null,
+    };
+
+    setBtnLoading('prog-submit-btn', true);
+    const ok = await fireWebhook(WEBHOOKS.siteDiary, payload); // reuse until dedicated webhook added
+    setBtnLoading('prog-submit-btn', false);
+
+    if (ok) {
+      setStatus('prog-status', true, '✅ Progress updated — ' + actual + '% actual vs ' + planned + '% planned' + (notice==='yes' ? ' · Delay notice sent' : ''));
+      toast('✅ Programme updated', 'success');
+      setTimeout(() => go('page-programme'), 1800);
+    } else {
+      setStatus('prog-status', false, '❌ Webhook failed — payload logged to console.');
+      console.log('Programme payload:', JSON.stringify(payload, null, 2));
+      toast('❌ Webhook failed', 'error');
+    }
+  }
+
+  // Set today's date on all date inputs on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    ['diary-date','var-date','prog-date'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = today;
+    });
+  });
+
+  // ─── DOCUMENT UPLOAD ──────────────────────────────────────────────────────
+  let docFileData = null;
+
+  const DOC_ICONS = {
+    pdf: '📄', jpg: '🖼️', jpeg: '🖼️', png: '🖼️',
+    doc: '📝', docx: '📝', default: '📁'
+  };
+
+  const DOC_EXPIRY_TYPES   = ['insurance','certification','cscs','contract'];
+  const DOC_OPERATIVE_TYPES = ['cscs'];
+  const DOC_PROVIDER_TYPES  = ['insurance','certification'];
+
+  function handleDocFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) { setStatus('doc-status', false, '❌ File too large — max 20MB'); return; }
+    showDocPreview(file);
+  }
+
+  function handleDocDrop(e) {
+    e.preventDefault();
+    document.getElementById('doc-dropzone').style.borderColor = 'var(--border2)';
+    const file = e.dataTransfer.files[0];
+    if (file) showDocPreview(file);
+  }
+
+  function showDocPreview(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const icon = DOC_ICONS[ext] || DOC_ICONS.default;
+    const sizeMB = (file.size / (1024*1024)).toFixed(2);
+
+    document.getElementById('doc-preview-icon').textContent = icon;
+    document.getElementById('doc-preview-name').textContent = file.name;
+    document.getElementById('doc-preview-size').textContent = sizeMB + ' MB · ' + ext.toUpperCase();
+    document.getElementById('doc-preview').style.display = 'block';
+    document.getElementById('doc-dropzone').style.display = 'none';
+
+    // Show image preview for image files
+    if (['jpg','jpeg','png'].includes(ext)) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('doc-img-el').src = e.target.result;
+        document.getElementById('doc-img-preview').style.display = 'block';
+        docFileData = { name: file.name, type: file.type, size: file.size, ext, base64: e.target.result };
+      };
+      reader.readAsDataURL(file);
+    } else {
+      docFileData = { name: file.name, type: file.type, size: file.size, ext, base64: null };
+    }
+
+    // Auto-fill document name if empty
+    const nameEl = document.getElementById('doc-name');
+    if (!nameEl.value) nameEl.value = file.name.replace(/\.[^/.]+$/, '');
+  }
+
+  function clearDocFile() {
+    docFileData = null;
+    document.getElementById('doc-preview').style.display = 'none';
+    document.getElementById('doc-img-preview').style.display = 'none';
+    document.getElementById('doc-dropzone').style.display = 'block';
+    document.getElementById('doc-file-input').value = '';
+  }
+
+  function updateDocFields() {
+    const type = document.getElementById('doc-type').value;
+    document.getElementById('doc-expiry-group').style.display    = DOC_EXPIRY_TYPES.includes(type)   ? 'block' : 'none';
+    document.getElementById('doc-operative-group').style.display = DOC_OPERATIVE_TYPES.includes(type) ? 'block' : 'none';
+    document.getElementById('doc-provider-group').style.display  = DOC_PROVIDER_TYPES.includes(type)  ? 'block' : 'none';
+  }
+
+  function toggleDocShare() {
+    const current = document.getElementById('doc-shareable').value === 'true';
+    const next = !current;
+    document.getElementById('doc-shareable').value = next;
+    document.getElementById('doc-share-toggle').style.background = next ? 'var(--orange)' : 'var(--border2)';
+    document.getElementById('doc-share-knob').style.left = next ? '21px' : '3px';
+  }
+
+  async function submitDocument() {
+    const type = document.getElementById('doc-type').value;
+    const name = document.getElementById('doc-name').value.trim();
+    if (!docFileData) { setStatus('doc-status', false, '⚠️ Please select a file to upload'); return; }
+    if (!type)        { setStatus('doc-status', false, '⚠️ Please select a document type'); return; }
+    if (!name)        { setStatus('doc-status', false, '⚠️ Please enter a document name'); return; }
+
+    const payload = {
+      submittedAt:    new Date().toISOString(),
+      company:        'Thalos Ltd',
+      documentType:   type,
+      documentName:   name,
+      fileName:       docFileData.name,
+      fileType:       docFileData.type,
+      fileSizeBytes:  docFileData.size,
+      fileExt:        docFileData.ext,
+      linkedSite:     document.getElementById('doc-site').value.trim() || null,
+      expiryDate:     document.getElementById('doc-expiry')?.value || null,
+      alertDaysBefore: document.getElementById('doc-alert')?.value || null,
+      operative:      document.getElementById('doc-operative')?.value.trim() || null,
+      provider:       document.getElementById('doc-provider')?.value.trim() || null,
+      reference:      document.getElementById('doc-ref')?.value.trim() || null,
+      notes:          document.getElementById('doc-notes').value.trim() || null,
+      shareable:      document.getElementById('doc-shareable').value === 'true',
+      // base64 only sent for images; PDFs/docs sent by filename reference
+      fileData:       docFileData.base64 || null,
+    };
+
+    setBtnLoading('doc-submit-btn', true);
+    const ok = await fireWebhook(WEBHOOKS.uploadDocument, payload);
+    setBtnLoading('doc-submit-btn', false);
+
+    if (ok) {
+      setStatus('doc-status', true, '✅ ' + name + ' uploaded to your document vault' + (payload.expiryDate ? ' · Expiry alert set' : ''));
+      toast('✅ Document saved', 'success');
+      setTimeout(() => go('page-documents'), 1800);
+    } else {
+      setStatus('doc-status', false, '❌ Webhook failed — check n8n URL. Payload logged to console.');
+      console.log('Document payload:', JSON.stringify({...payload, fileData: payload.fileData ? '[base64 truncated]' : null}, null, 2));
+      toast('❌ Upload failed', 'error');
+    }
+  }
+
+  // ─── BILLING ──────────────────────────────────────────────────────────────
+  const PLANS = {
+    starter:  { name: 'STARTER',  monthly: 59,  annual: 47  },
+    pro:      { name: 'PRO',      monthly: 119, annual: 95  },
+  };
+
+  let billingCycle = 'monthly';
+  let selectedPlan = 'pro';
+
+  // Stripe Payment Link URLs — swap these when Stripe is live
+  const STRIPE_LINKS = {
+    starter_monthly:  'https://buy.stripe.com/YOUR_STARTER_MONTHLY',
+    starter_annual:   'https://buy.stripe.com/YOUR_STARTER_ANNUAL',
+    pro_monthly:      'https://buy.stripe.com/YOUR_PRO_MONTHLY',
+    pro_annual:       'https://buy.stripe.com/YOUR_PRO_ANNUAL',
+  };
+
+  function setBilling(cycle) {
+    billingCycle = cycle;
+    const isAnnual = cycle === 'annual';
+    document.getElementById('tog-monthly').style.background = isAnnual ? 'transparent' : 'var(--orange)';
+    document.getElementById('tog-monthly').style.color = isAnnual ? 'var(--muted)' : 'white';
+    document.getElementById('tog-annual').style.background = isAnnual ? 'var(--orange)' : 'transparent';
+    document.getElementById('tog-annual').style.color = isAnnual ? 'white' : 'var(--muted)';
+
+    Object.keys(PLANS).forEach(key => {
+      const p = PLANS[key];
+      const price = isAnnual ? p.annual : p.monthly;
+      const el = document.getElementById('price-' + key);
+      if (el) el.textContent = '£' + price;
+    });
+  }
+
+  function selectPlan(plan) { selectedPlan = plan; }
+
+  function openPayment(plan) {
+    selectedPlan = plan;
+    const p = PLANS[plan];
+    const price = billingCycle === 'annual' ? p.annual : p.monthly;
+    const cycleLabel = billingCycle === 'annual' ? '/month (billed annually)' : '/month';
+
+    document.getElementById('pm-plan-name').textContent = p.name;
+    document.getElementById('pm-plan-name').style.color =
+      plan === 'pro' ? 'var(--orange)' : plan === 'director' ? 'var(--amber)' : 'var(--text)';
+    document.getElementById('pm-price').textContent = '£' + price;
+    document.getElementById('pm-cycle').textContent = cycleLabel;
+    document.getElementById('pm-summary-plan').textContent = p.name + ' — ' + (billingCycle === 'annual' ? 'Annual' : 'Monthly');
+
+    // First charge date = today + 14 days
+    const chargeDate = new Date();
+    chargeDate.setDate(chargeDate.getDate() + 14);
+    const uk = chargeDate.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][chargeDate.getMonth()] + ' ' + chargeDate.getFullYear();
+    document.getElementById('pm-first-charge').textContent = '£' + (billingCycle === 'annual' ? price * 12 : price) + ' on ' + uk;
+
+    document.getElementById('payment-modal').style.display = 'flex';
+  }
+
+  function closePayment() {
+    document.getElementById('payment-modal').style.display = 'none';
+  }
+
+  function confirmPayment() {
+    // When Stripe is live, redirect instead:
+    // window.location.href = STRIPE_LINKS[selectedPlan + '_' + billingCycle];
+    closePayment();
+    const p = PLANS[selectedPlan];
+    document.getElementById('plan-name-display').textContent = p.name;
+    const price = billingCycle === 'annual' ? p.annual : p.monthly;
+    document.getElementById('plan-price-display').textContent = '£' + price;
+    toast('🎉 Subscribed to ' + p.name + ' — welcome aboard!', 'success');
+  }
+
+  document.getElementById('payment-modal').addEventListener('click', function(e) {
+    if (e.target === this) closePayment();
+  });
+
+</script>
+</body>
+</html>
