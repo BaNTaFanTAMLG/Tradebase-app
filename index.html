@@ -11,7 +11,6 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>TradeBase</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --black: #080808;
@@ -28,8 +27,8 @@
   --text: #F2F2F2;
   --muted: #777;
   --subtle: #3a3a3a;
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Impact', 'Arial Narrow', sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html { height:100%; }
@@ -978,16 +977,6 @@ textarea.finp { resize:vertical; min-height:90px; }
 </div>
 
 <script>
-  // ─── SERVICE WORKER (PWA) ─────────────────────────────────────────────────
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/Tradebase-app/sw.js', { scope: '/Tradebase-app/' })
-        .then(() => console.log('TradeBase SW registered'))
-        .catch(err => console.log('SW error:', err));
-    });
-  }
-
-
   // Replace these URLs with your real n8n webhook URLs when ready
   const WEBHOOKS = {
     newInvoice:       'https://your-n8n-instance.com/webhook/new-invoice',
