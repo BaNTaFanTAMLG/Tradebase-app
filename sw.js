@@ -1,10 +1,10 @@
 const CACHE = 'tradebase-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/Tradebase-app/',
+  '/Tradebase-app/index.html',
+  '/Tradebase-app/manifest.json',
+  '/Tradebase-app/icon-192.png',
+  '/Tradebase-app/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap'
 ];
 

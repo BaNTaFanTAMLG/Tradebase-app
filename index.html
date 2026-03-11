@@ -981,7 +981,7 @@ textarea.finp { resize:vertical; min-height:90px; }
   // ─── SERVICE WORKER (PWA) ─────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/Tradebase-app/sw.js', { scope: '/Tradebase-app/' })
         .then(() => console.log('TradeBase SW registered'))
         .catch(err => console.log('SW error:', err));
     });
