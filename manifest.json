@@ -6,8 +6,8 @@
   "scope": "https://bantafantamlg.github.io/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#080808",
-  "theme_color": "#FF4D00",
+  "background_color": "#0A0A0C",
+  "theme_color": "#FF5500",
   "icons": [
     {
       "src": "icon-192.png",
