@@ -1775,7 +1775,7 @@ textarea.finp { resize:vertical; min-height:100px; }
       fix_by_date:document.getElementById('snag-deadline').value||null,
       priority:document.getElementById('snag-priority').value
     });
-    fireWebhook(WEBHOOKS.logSnag,{submittedAt:new Date().toISOString(),company:currentCompany.name,snagRef,site,location,description:desc});
+    fireWebhook(WEBHOOKS.logSnag,{submittedAt:new Date().toISOString(),company:currentCompany.name,companyEmail:currentCompany.email||'',snagRef,site,location,description:desc,raisedBy,assignedTo:document.getElementById('snag-assigned').value.trim()||null,fixByDate:document.getElementById('snag-deadline').value||null,priority:document.getElementById('snag-priority').value,status:'open'});
     setBtnLoading('snag-submit-btn',false);
     if(error){setStatus('snag-status',false,'❌ '+error.message);return;}
     setStatus('snag-status',true,'✅ '+snagRef+' logged');
