@@ -296,6 +296,8 @@ textarea.finp { resize:vertical; min-height:100px; }
     <div id="signup-status" style="display:none;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;font-size:13px;font-weight:500;line-height:1.4"></div>
     <label class="login-lbl">Company Name</label>
     <input type="text" class="login-input" id="signup-company" placeholder="e.g. Thalos Ltd">
+    <label class="login-lbl">Company Phone Number</label>
+    <input type="tel" class="login-input" id="signup-phone" placeholder="+44 7700 000000">
     <label class="login-lbl">Email Address</label>
     <input type="email" class="login-input" id="signup-email" placeholder="you@company.co.uk">
     <label class="login-lbl">Password (min 6 characters)</label>
@@ -1044,12 +1046,13 @@ textarea.finp { resize:vertical; min-height:100px; }
 
   // ═══ WEBHOOK URLS (still fire n8n automations alongside DB saves) ═════════
   const WEBHOOKS = {
-    newInvoice:       'https://ciccio123456.app.n8n.cloud/webhook/tally-invoice',
+    newInvoice:       'https://your-n8n-instance.com/webhook/new-invoice',
     chaseInvoice:     'https://your-n8n-instance.com/webhook/chase-invoice',
     logVariation:     'https://ciccio123456.app.n8n.cloud/webhook/variation-capture',
     newRfi:           'https://your-n8n-instance.com/webhook/new-rfi',
     siteDiary:        'https://ciccio123456.app.n8n.cloud/webhook/site-diary',
     logSnag:          'https://your-n8n-instance.com/webhook/log-snag',
+    closeSnag:        'https://your-n8n-instance.com/webhook/close-snag',
     programmeUpdate:  'https://your-n8n-instance.com/webhook/programme-update',
     uploadDocument:   'https://your-n8n-instance.com/webhook/upload-document',
   };
@@ -1183,6 +1186,7 @@ textarea.finp { resize:vertical; min-height:100px; }
 
   async function doSignUp() {
     const company = document.getElementById('signup-company').value.trim();
+    const phone = document.getElementById('signup-phone').value.trim();
     const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
     if (!company || !email || !password) { setAuthStatus('signup-status', false, 'Please fill in all fields'); return; }
@@ -1200,6 +1204,13 @@ textarea.finp { resize:vertical; min-height:100px; }
 
     // Check if email confirmation is required
     if (data.user && !data.session) {
+      // Still create company record so it's ready when they confirm
+      await sb.from('companies').insert({
+        owner_id: data.user.id,
+        name: company,
+        email: email,
+        phone: phone || null
+      });
       setAuthStatus('signup-status', true, '✅ Check your email to confirm your account, then sign in.');
       return;
     }
@@ -1210,7 +1221,8 @@ textarea.finp { resize:vertical; min-height:100px; }
     const { error: compErr } = await sb.from('companies').insert({
       owner_id: currentUser.id,
       name: company,
-      email: email
+      email: email,
+      phone: phone || null
     });
 
     if (compErr) { console.error('Company creation failed:', compErr); }
@@ -1637,8 +1649,42 @@ textarea.finp { resize:vertical; min-height:100px; }
   async function markSnagClosed(id) {
     modal('Mark Snag Complete?', 'Snag marked complete — notification sent to team.', async () => {
       const today = new Date().toISOString().split('T')[0];
+
+      // Fetch the snag details before closing
+      const { data: snagData } = await sb.from('snags').select('*').eq('id', id).single();
+
+      // Update status in database
       await sb.from('snags').update({ status: 'closed', closed_date: today }).eq('id', id);
+
+      // Check if all snags on this site are now closed
+      let allSiteClosed = false;
+      if (snagData) {
+        const { data: siteSnags } = await sb.from('snags').select('status').eq('company_id', currentCompany.id).eq('site', snagData.site);
+        allSiteClosed = siteSnags && siteSnags.every(s => s.status === 'closed');
+      }
+
+      // Fire webhook with full details
+      if (snagData) {
+        fireWebhook(WEBHOOKS.closeSnag, {
+          closedAt: new Date().toISOString(),
+          company: currentCompany.name, companyPhone: currentCompany.phone || '',
+          companyEmail: currentCompany.email || '',
+          snagRef: snagData.snag_ref,
+          site: snagData.site,
+          location: snagData.location,
+          description: snagData.description,
+          priority: snagData.priority,
+          raisedBy: snagData.raised_by,
+          assignedTo: snagData.assigned_to,
+          closedDate: today,
+          allSiteSnagsNowClosed: allSiteClosed
+        });
+      }
+
       toast('✅ Snag closed', 'success');
+      if (allSiteClosed && snagData) {
+        setTimeout(() => toast('💰 All snags on ' + snagData.site + ' now closed — raise retention invoice', 'info'), 1500);
+      }
       loadSnags();
     });
   }
@@ -1674,7 +1720,7 @@ textarea.finp { resize:vertical; min-height:100px; }
 
     // Also fire webhook for n8n automation
     fireWebhook(WEBHOOKS.newInvoice, {
-      submittedAt: new Date().toISOString(), submittedBy: currentCompany.name,
+      submittedAt: new Date().toISOString(), company: currentCompany.name, companyEmail: currentCompany.email || '', companyPhone: currentCompany.phone || '',
       invoiceNumber: invNum, clientName: client, clientEmail: email, site, workDescription: work,
       netAmount: net.toFixed(2), vatRate: vat, grossAmount: gross.toFixed(2), dueDateISO: due,
       dueDateUK: formatUKDate(due), chaseSchedule: { reminder1:'3 days before due', overdueChase:'every 7 days' }
@@ -1708,7 +1754,7 @@ textarea.finp { resize:vertical; min-height:100px; }
       plant: document.getElementById('diary-plant').value.trim() || null,
       visitors: document.getElementById('diary-visitors').value.trim() || null,
     });
-    fireWebhook(WEBHOOKS.siteDiary, { submittedAt:new Date().toISOString(), company_name:currentCompany.name, company_email:email, siteName:site, date, labourCount:parseInt(labour), weather:document.getElementById('diary-weather').value, progressDescription:work, progressPercent:parseInt(document.getElementById('diary-progress').value) });
+    fireWebhook(WEBHOOKS.siteDiary, { submittedAt:new Date().toISOString(), company:currentCompany.name, companyEmail:currentCompany.email||'', companyPhone:currentCompany.phone||'', clientEmail:email, siteName:site, date, labourCount:parseInt(labour), weather:document.getElementById('diary-weather').value, progressDescription:work, progressPercent:parseInt(document.getElementById('diary-progress').value) });
     setBtnLoading('diary-submit-btn', false);
     if (error) { setStatus('diary-status',false,'❌ '+error.message); return; }
     setStatus('diary-status',true,'✅ Diary entry saved — PDF will be emailed to '+email);
@@ -1731,7 +1777,7 @@ textarea.finp { resize:vertical; min-height:100px; }
       verbal_instruction_by:document.getElementById('var-instruction').value.trim()||null,
       estimated_cost:parseFloat(cost).toFixed(2),hours_spent:document.getElementById('var-hours').value||null
     });
-    fireWebhook(WEBHOOKS.logVariation,{submittedAt:new Date().toISOString(),company:currentCompany.name,variationRef:varRef,siteName:site,contractorName:mc,contractorEmail:email,foremanName:by,dateLogged:date,variationDescription:desc,estimatedCost:parseFloat(cost).toFixed(2)});
+    fireWebhook(WEBHOOKS.logVariation,{submittedAt:new Date().toISOString(),company:currentCompany.name,companyEmail:currentCompany.email||'',companyPhone:currentCompany.phone||'',variationRef:varRef,siteName:site,contractorName:mc,contractorEmail:email,foremanName:by,dateLogged:date,variationDescription:desc,estimatedCost:parseFloat(cost).toFixed(2)});
     setBtnLoading('var-submit-btn',false);
     if(error){setStatus('var-status',false,'❌ '+error.message);return;}
     setStatus('var-status',true,'✅ Variation '+varRef+' submitted — JCT notice sent to '+mc);
@@ -1753,7 +1799,7 @@ textarea.finp { resize:vertical; min-height:100px; }
       subject,description:desc,work_blocked:blocked==='yes',
       response_deadline:document.getElementById('rfi-deadline').value||null
     });
-    fireWebhook(WEBHOOKS.newRfi,{submittedAt:new Date().toISOString(),company:currentCompany.name,rfiRef,site,addressedTo:to,contactEmail:email,subject,description:desc,workBlocked:blocked==='yes'});
+    fireWebhook(WEBHOOKS.newRfi,{submittedAt:new Date().toISOString(),company:currentCompany.name,companyEmail:currentCompany.email||'',companyPhone:currentCompany.phone||'',rfiRef,site,addressedTo:to,contactEmail:email,subject,description:desc,workBlocked:blocked==='yes'});
     setBtnLoading('rfi-submit-btn',false);
     if(error){setStatus('rfi-status',false,'❌ '+error.message);return;}
     setStatus('rfi-status',true,'✅ '+rfiRef+' sent to '+to+' — auto-chase scheduled');
@@ -1775,7 +1821,7 @@ textarea.finp { resize:vertical; min-height:100px; }
       fix_by_date:document.getElementById('snag-deadline').value||null,
       priority:document.getElementById('snag-priority').value
     });
-    fireWebhook(WEBHOOKS.logSnag,{submittedAt:new Date().toISOString(),company:currentCompany.name,companyEmail:currentCompany.email||'',snagRef,site,location,description:desc,raisedBy,assignedTo:document.getElementById('snag-assigned').value.trim()||null,fixByDate:document.getElementById('snag-deadline').value||null,priority:document.getElementById('snag-priority').value,status:'open'});
+    fireWebhook(WEBHOOKS.logSnag,{submittedAt:new Date().toISOString(),company:currentCompany.name,companyEmail:currentCompany.email||'',companyPhone:currentCompany.phone||'',snagRef,site,location,description:desc,raisedBy,assignedTo:document.getElementById('snag-assigned').value.trim()||null,fixByDate:document.getElementById('snag-deadline').value||null,priority:document.getElementById('snag-priority').value,status:'open'});
     setBtnLoading('snag-submit-btn',false);
     if(error){setStatus('snag-status',false,'❌ '+error.message);return;}
     setStatus('snag-status',true,'✅ '+snagRef+' logged');
@@ -1798,7 +1844,7 @@ textarea.finp { resize:vertical; min-height:100px; }
       delay_reason:document.getElementById('prog-delay').value.trim()||null,
       issue_delay_notice:notice==='yes',next_milestone:document.getElementById('prog-milestone').value.trim()||null
     });
-    fireWebhook(WEBHOOKS.programmeUpdate,{submittedAt:new Date().toISOString(),company:currentCompany.name,site,actualPct:actual,plannedPct:planned});
+    fireWebhook(WEBHOOKS.programmeUpdate,{submittedAt:new Date().toISOString(),company:currentCompany.name,companyEmail:currentCompany.email||'',companyPhone:currentCompany.phone||'',site,actualPct:actual,plannedPct:planned});
     setBtnLoading('prog-submit-btn',false);
     if(error){setStatus('prog-status',false,'❌ '+error.message);return;}
     setStatus('prog-status',true,'✅ Progress updated — '+actual+'% actual vs '+planned+'% planned');
